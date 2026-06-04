@@ -1,22 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mealcrunchy/data/repositories/auth_repository.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/repositories/preferences_repository.dart';
+import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/ui/core/routing/app_router.dart';
+import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
+import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
 import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_model.dart';
 import 'package:mealcrunchy/ui/features/profile/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
 class MealCrunchyApp extends StatelessWidget {
-  const MealCrunchyApp({super.key});
+  const MealCrunchyApp({
+    super.key,
+    this.authRepository,
+    this.initialLocation = AppRoutes.splash,
+  });
+
+  final AuthRepository? authRepository;
+  final String initialLocation;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider(create: (_) => const StaticDesignContentService()),
+        Provider<AuthService>(create: (_) => FirebaseAuthService()),
+        ProxyProvider<AuthService, AuthRepository>(
+          update: (_, authService, previous) {
+            return authRepository ??
+                previous ??
+                AuthRepository(service: authService);
+          },
+        ),
         ProxyProvider<StaticDesignContentService, MealPlanRepository>(
           update: (_, contentService, previous) {
             return MealPlanRepository(contentService: contentService);
@@ -25,6 +45,16 @@ class MealCrunchyApp extends StatelessWidget {
         ProxyProvider<StaticDesignContentService, PreferencesRepository>(
           update: (_, contentService, previous) {
             return PreferencesRepository(contentService: contentService);
+          },
+        ),
+        ChangeNotifierProxyProvider<AuthRepository, AuthViewModel>(
+          create: (context) {
+            return AuthViewModel(
+              authRepository: context.read<AuthRepository>(),
+            );
+          },
+          update: (_, repository, previous) {
+            return previous ?? AuthViewModel(authRepository: repository);
           },
         ),
         ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
@@ -51,12 +81,39 @@ class MealCrunchyApp extends StatelessWidget {
           },
         ),
       ],
-      child: MaterialApp.router(
-        title: 'MealCrunchy',
-        theme: AppTheme.light(),
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
-      ),
+      child: _MealCrunchyRouter(initialLocation: initialLocation),
+    );
+  }
+}
+
+class _MealCrunchyRouter extends StatefulWidget {
+  const _MealCrunchyRouter({required this.initialLocation});
+
+  final String initialLocation;
+
+  @override
+  State<_MealCrunchyRouter> createState() => _MealCrunchyRouterState();
+}
+
+class _MealCrunchyRouterState extends State<_MealCrunchyRouter> {
+  GoRouter? _router;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _router ??= createAppRouter(
+      authViewModel: context.read<AuthViewModel>(),
+      initialLocation: widget.initialLocation,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(
+      title: 'MealCrunchy',
+      theme: AppTheme.light(),
+      routerConfig: _router!,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
