@@ -45,7 +45,7 @@ class SplashScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Votre guide nutritionnel propulse par l\'IA',
+                    'Votre guide nutritionnel propulsé par l\'IA',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: AppColors.secondaryText,
@@ -61,7 +61,7 @@ class SplashScreen extends StatelessWidget {
                   const ProgressPill(progress: 0.44),
                   const SizedBox(height: 10),
                   Text(
-                    'Personnalisation de votre experience...',
+                    'Personnalisation de votre expérience...',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.secondaryText,
                     ),

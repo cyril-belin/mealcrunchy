@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "443697553984",
+    "project_id": "mealcrunchy-20260604",
+    "storage_bucket": "mealcrunchy-20260604.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:443697553984:android:25fa8ed92935eec47a75a5",
+        "android_client_info": {
+          "package_name": "com.cyrilbelin.mealcrunchy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWMc2uvf_t-_QW2JbUL_Jtxc8zN1eg99M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

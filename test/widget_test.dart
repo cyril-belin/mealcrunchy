@@ -1,28 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mealcrunchy/data/repositories/auth_repository.dart';
+import 'package:mealcrunchy/data/services/auth_service.dart';
+import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/ui/app.dart';
-import 'package:mealcrunchy/ui/core/routing/app_router.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 
 void main() {
   testWidgets('renders the routed MealCrunchy app', (tester) async {
-    appRouter.go(AppRoutes.splash);
-    await tester.pumpWidget(const MealCrunchyApp());
+    await tester.pumpWidget(
+      MealCrunchyApp(authRepository: _authRepository(account: null)),
+    );
+    await tester.pumpAndSettle();
 
     expect(find.text('MealCrunchy'), findsOneWidget);
     expect(
-      find.text('Votre guide nutritionnel propulse par l\'IA'),
+      find.text('Votre guide nutritionnel propulsé par l\'IA'),
       findsOneWidget,
     );
+    expect(find.text('Commencer'), findsOneWidget);
   });
 
   testWidgets('meal detail back button falls back to the meal plan route', (
     tester,
   ) async {
-    appRouter.go(AppRoutes.splash);
-    await tester.pumpWidget(const MealCrunchyApp());
-
-    appRouter.go(AppRoutes.mealDetailsFor('avocado-toast'));
+    await tester.pumpWidget(
+      MealCrunchyApp(
+        authRepository: _authRepository(account: _account),
+        initialLocation: AppRoutes.mealDetailsFor('avocado-toast'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Toast avocat et oeuf'), findsOneWidget);
@@ -40,8 +47,12 @@ void main() {
   testWidgets('auth screen switches between login and sign up modes', (
     tester,
   ) async {
-    appRouter.go(AppRoutes.auth);
-    await tester.pumpWidget(const MealCrunchyApp());
+    await tester.pumpWidget(
+      MealCrunchyApp(
+        authRepository: _authRepository(account: null),
+        initialLocation: AppRoutes.auth,
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Se connecter'), findsOneWidget);
@@ -51,12 +62,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Nom complet'), findsOneWidget);
-    expect(find.text('Creer un compte'), findsWidgets);
+    expect(find.text('Créer un compte'), findsWidgets);
   });
 
   testWidgets('onboarding goal cards can be selected', (tester) async {
-    appRouter.go(AppRoutes.onboardingGoals);
-    await tester.pumpWidget(const MealCrunchyApp());
+    await tester.pumpWidget(
+      MealCrunchyApp(
+        authRepository: _authRepository(account: _account),
+        initialLocation: AppRoutes.onboardingGoals,
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(
@@ -84,8 +99,12 @@ void main() {
   testWidgets('meal detail prototype actions give visible feedback', (
     tester,
   ) async {
-    appRouter.go(AppRoutes.mealDetailsFor('avocado-toast'));
-    await tester.pumpWidget(const MealCrunchyApp());
+    await tester.pumpWidget(
+      MealCrunchyApp(
+        authRepository: _authRepository(account: _account),
+        initialLocation: AppRoutes.mealDetailsFor('avocado-toast'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(Icons.favorite_border_rounded));
@@ -102,4 +121,47 @@ void main() {
       findsOneWidget,
     );
   });
+}
+
+AuthRepository _authRepository({required AuthAccount? account}) {
+  return AuthRepository(service: _AuthService(account: account));
+}
+
+const _account = AuthAccount(
+  uid: 'user-1',
+  email: 'alex@example.com',
+  displayName: 'Alex Rivers',
+);
+
+class _AuthService implements AuthService {
+  const _AuthService({required this.account});
+
+  final AuthAccount? account;
+
+  @override
+  Stream<AuthAccount?> authStateChanges() =>
+      Stream<AuthAccount?>.value(account);
+
+  @override
+  AuthAccount? get currentAccount => account;
+
+  @override
+  Future<AuthAccount> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return account ?? _account;
+  }
+
+  @override
+  Future<AuthAccount> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    return account ?? _account;
+  }
+
+  @override
+  Future<void> signOut() async {}
 }
