@@ -9,6 +9,19 @@ import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_mod
 
 void main() {
   group('MealPlanViewModel daily tracking', () {
+    test(
+      'mealById returns the matching meal and null for an unknown id',
+      () async {
+        final viewModel = MealPlanViewModel(
+          mealPlanRepository: _TrackingMealPlanRepository(),
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        expect(viewModel.mealById('breakfast'), same(_breakfast));
+        expect(viewModel.mealById('missing-meal'), isNull);
+      },
+    );
+
     test('marking a meal consumed increases consumed calories', () async {
       final viewModel = MealPlanViewModel(
         mealPlanRepository: _TrackingMealPlanRepository(),

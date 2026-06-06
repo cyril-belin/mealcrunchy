@@ -32,7 +32,7 @@ Chaque nouvelle fonctionnalite doit etre traitee dans une nouvelle fenetre ou un
 | 4 | Proxy Firebase OpenAI | A faire | [proxy-firebase-openai.md](proxy-firebase-openai.md) |
 | 5 | Generation plan IA 7 jours | A faire | [generation-plan-ia-7-jours.md](generation-plan-ia-7-jours.md) |
 | 6 | Dashboard suivi quotidien | Terminee | [dashboard-suivi-quotidien.md](dashboard-suivi-quotidien.md) |
-| 7 | Detail repas | A faire | [detail-repas.md](detail-repas.md) |
+| 7 | Detail repas | Terminee | [detail-repas.md](detail-repas.md) |
 | 8 | Remplacement repas | A faire | [remplacement-repas.md](remplacement-repas.md) |
 | 9 | Liste de courses | A faire | [liste-courses.md](liste-courses.md) |
 | 10 | Profil et preferences | A faire | [profil-preferences.md](profil-preferences.md) |
@@ -59,9 +59,9 @@ Pour chaque fonctionnalite :
 ## Derniere mise a jour
 
 - Date : 2026-06-06
-- Changement : dashboard suivi quotidien implemente avec repas cochables, calcul calories/macros depuis les repas consommes, persistance locale `shared_preferences`, tests ViewModel/widget, `flutter test` et `flutter analyze` valides.
+- Changement : detail repas termine avec affichage exact des donnees du modele, coherence dashboard/detail, etat repas introuvable, actions prototype retirees, tests ViewModel/widget, `flutter test` et `flutter analyze` valides. Les fonctionnalites 3 a 5 restent sautees explicitement pour cette tranche.
 - Fonctionnalite active : aucune.
-- Prochaine fonctionnalite autorisee : Stockage local des donnees selon la roadmap stricte ; detail repas reste bloque tant que les fonctionnalites intermediaires ne sont pas traitees ou explicitement sautees.
+- Prochaine fonctionnalite autorisee : Remplacement repas, sauf retour explicite sur les fonctionnalites 3 a 5.
 
 ## Erreurs importantes rencontrees
 
@@ -72,6 +72,7 @@ Pour chaque fonctionnalite :
 | 2026-06-04 | Authentification compte simple | MCP Flutter / DTD non connecte pendant les corrections Firebase Auth | Validation finale realisee avec MCP Dart `analyze_files`, `flutter test` et `flutter analyze`. |
 | 2026-06-06 | Onboarding profil nutritionnel | `flutter test` global echouait avant implementation : `test/config/reste_a_faire_config_test.dart` cherchait l'ancien chemin Android `com/cyrilbelin/.../MainActivity.kt` | Reference de test corrigee vers `fr/cyrilbelin/.../MainActivity.kt`, puis `flutter test` relance avec succes. |
 | 2026-06-06 | Dashboard suivi quotidien | `flutter test` complet echouait apres ajout de `shared_preferences` car certains tests n'isolaient pas le stockage local | Tests ajustes avec `MemoryDailyMealTrackingStore` ou `SharedPreferences.setMockInitialValues`, puis suite complete relancee avec succes. |
+| 2026-06-06 | Detail repas | MCP Flutter / DTD non connecte pendant l'inspection widget live | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, MCP Dart `analyze_files`, `flutter test` et `flutter analyze`. |
 
 ## Historique de validation
 
@@ -82,3 +83,4 @@ Pour chaque fonctionnalite :
 | 2026-06-04 | Authentification compte simple | Terminee | Corrections Firebase Auth validees : routage splash/auth, erreurs Firebase non masquees, formulaire `Form`, accents, egalite `AuthAccount`, puis bundle ID passe a `com.cyrilbelin.mealcrunchy` via `RESTE_A_FAIRE.md`. |
 | 2026-06-06 | Onboarding profil nutritionnel | Terminee | Tests cibles onboarding, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
 | 2026-06-06 | Dashboard suivi quotidien | Terminee | Repas cochables, progression calories/macros calculee depuis les repas consommes, persistance locale par jour et tests dashboard valides. |
+| 2026-06-06 | Detail repas | Terminee | Detail en lecture seule, coherence dashboard/detail, etat repas introuvable, tests ViewModel/widget, `flutter test` et `flutter analyze` valides. |

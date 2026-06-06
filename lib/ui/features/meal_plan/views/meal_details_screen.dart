@@ -9,24 +9,10 @@ import 'package:mealcrunchy/ui/core/widgets/design_primitives.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
 import 'package:provider/provider.dart';
 
-class MealDetailsScreen extends StatefulWidget {
+class MealDetailsScreen extends StatelessWidget {
   const MealDetailsScreen({required this.mealId, super.key});
 
   final String mealId;
-
-  @override
-  State<MealDetailsScreen> createState() => _MealDetailsScreenState();
-}
-
-class _MealDetailsScreenState extends State<MealDetailsScreen> {
-  var _isFavorite = false;
-  var _isEaten = false;
-
-  void _showPrototypeMessage(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(message)));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,48 +24,24 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
         scrollable: false,
         child: Center(child: CircularProgressIndicator()),
       ),
-      ViewError<List<Meal>>(message: final message) => _MealStateScaffold(
+      ViewError<List<Meal>>() => _MealStateScaffold(
         title: 'Impossible de charger ce repas.',
-        message: message,
-        actionLabel: 'Reessayer',
+        message: 'Le détail du repas est temporairement indisponible.',
+        actionLabel: 'Réessayer',
         actionIcon: Icons.refresh_rounded,
         onAction: viewModel.load,
       ),
       ViewData<List<Meal>>() => _MealDetailsContent(
-        meal: viewModel.mealById(widget.mealId),
-        isFavorite: _isFavorite,
-        isEaten: _isEaten,
-        onFavoriteToggle: () {
-          setState(() => _isFavorite = !_isFavorite);
-          _showPrototypeMessage(
-            _isFavorite
-                ? 'Repas ajoute aux favoris pour cette session.'
-                : 'Repas retire des favoris pour cette session.',
-          );
-        },
-        onEaten: () {
-          setState(() => _isEaten = true);
-          _showPrototypeMessage('Repas marque comme mange pour cette session.');
-        },
+        meal: viewModel.mealById(mealId),
       ),
     };
   }
 }
 
 class _MealDetailsContent extends StatelessWidget {
-  const _MealDetailsContent({
-    required this.meal,
-    required this.isFavorite,
-    required this.isEaten,
-    required this.onFavoriteToggle,
-    required this.onEaten,
-  });
+  const _MealDetailsContent({required this.meal});
 
   final Meal? meal;
-  final bool isFavorite;
-  final bool isEaten;
-  final VoidCallback onFavoriteToggle;
-  final VoidCallback onEaten;
 
   @override
   Widget build(BuildContext context) {
@@ -124,16 +86,6 @@ class _MealDetailsContent extends StatelessWidget {
 
                     context.go(AppRoutes.mealPlan);
                   },
-                ),
-              ),
-              Positioned(
-                right: 18,
-                top: 18,
-                child: _CircleButton(
-                  icon: isFavorite
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  onPressed: onFavoriteToggle,
                 ),
               ),
             ],
@@ -199,7 +151,7 @@ class _MealDetailsContent extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _MacroCard(
-                        label: 'Proteines',
+                        label: 'Protéines',
                         value: '${meal.protein}g',
                       ),
                     ),
@@ -223,16 +175,6 @@ class _MealDetailsContent extends StatelessWidget {
                 _IngredientList(meal: meal),
                 const SizedBox(height: 26),
                 _Instructions(meal: meal),
-                const SizedBox(height: 28),
-                ElevatedButton.icon(
-                  onPressed: onEaten,
-                  icon: Icon(
-                    isEaten
-                        ? Icons.done_all_rounded
-                        : Icons.check_circle_rounded,
-                  ),
-                  label: Text(isEaten ? 'Mange' : 'Marquer comme mange'),
-                ),
               ],
             ),
           ),
@@ -351,7 +293,7 @@ class _IngredientList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Ingredients', style: Theme.of(context).textTheme.titleLarge),
+        Text('Ingrédients', style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 12),
         ...meal.ingredients.map(
           (ingredient) => Padding(

@@ -307,6 +307,7 @@ class _MealCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      key: ValueKey('meal-card-${meal.id}'),
       borderRadius: BorderRadius.circular(24),
       onTap: () => context.go(AppRoutes.mealDetailsFor(meal.id)),
       child: SoftCard(
@@ -331,7 +332,7 @@ class _MealCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    meal.type,
+                    meal.typeLabel,
                     style: Theme.of(
                       context,
                     ).textTheme.labelSmall?.copyWith(color: AppColors.accent),

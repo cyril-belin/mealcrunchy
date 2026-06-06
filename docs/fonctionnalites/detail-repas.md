@@ -62,20 +62,25 @@ flutter analyze
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
-
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-06 | MCP Flutter / widget inspector | DTD non connecte : `The dart tooling daemon is not connected` | Aucune application Flutter active connectee au DTD dans ce contexte. | Inspection live documentee comme indisponible ; validation realisee par tests widget, MCP Dart, `flutter test` et `flutter analyze`. | `flutter test` et `flutter analyze` valides. |
 
 ## Checklist de fin
 
-- [ ] Le detail affiche les donnees exactes du repas.
-- [ ] Le cas repas introuvable est gere.
-- [ ] La navigation depuis le dashboard fonctionne.
-- [ ] Les tests widget passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] Le detail affiche les donnees exactes du repas.
+- [x] Le cas repas introuvable est gere.
+- [x] La navigation depuis le dashboard fonctionne.
+- [x] Les tests widget passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
+
+## Notes d'implementation
+
+- Le detail repas est en lecture seule : les actions prototype de favori et de repas mange localement ont ete retirees pour eviter un etat de session incoherent avec le dashboard.
+- Le dashboard et le detail utilisent les memes valeurs du modele `Meal` pour calories, macros et type lisible.
+- La navigation dashboard vers detail reste basee sur `AppRoutes.mealDetailsFor(meal.id)`.
 
 ## Mise a jour obligatoire du fichier global
 
