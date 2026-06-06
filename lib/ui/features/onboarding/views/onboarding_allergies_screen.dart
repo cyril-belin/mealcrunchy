@@ -67,7 +67,8 @@ class OnboardingAllergiesScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.labelLarge,
           ),
           const SizedBox(height: 8),
-          const TextField(
+          TextField(
+            onChanged: viewModel.updateCustomAversions,
             decoration: InputDecoration(
               prefixIcon: Icon(Icons.search_rounded),
               hintText: 'ex. coriandre, champignons...',

@@ -65,21 +65,28 @@ flutter analyze
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
-
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-06 | Tests dashboard rouges | Compilation en echec : `DailyMealTrackingStore`, `setMealConsumed`, `isMealConsumed` et injection `now` absents | Le dashboard etait encore statique : aucun modele de suivi quotidien ni API ViewModel pour cocher les repas. | Ajout du store de suivi quotidien, du calcul dans `MealPlanViewModel`, et de la checkbox par repas. | `flutter test test/ui/features/meal_plan/view_models/meal_plan_view_model_test.dart test/ui/features/meal_plan/views/daily_meal_plan_screen_test.dart` valide. |
+| 2026-06-06 | `flutter test` complet | Ancien test ViewModel passe en `ViewError` et deux tests widget expirent sur `pumpAndSettle` | Les tests existants n'isolaient pas encore `SharedPreferences` apres l'ajout de la persistance locale du suivi quotidien. | Tests existants ajustes avec `MemoryDailyMealTrackingStore` ou `SharedPreferences.setMockInitialValues`. | `flutter test` complet valide. |
+| 2026-06-06 | Test widget dashboard | Date du dashboard encore codee en dur : `Aujourd'hui, 24 oct.` | Le header n'utilisait pas la date courante. | Ajout de `MealPlanViewModel.currentDayLabel` base sur la date courante injectable. | Test widget `Aujourd'hui, 6 juin` valide. |
 
 ## Checklist de fin
 
-- [ ] L'utilisateur peut cocher et decocher un repas.
-- [ ] La progression calories/macros est correcte.
-- [ ] Le suivi est persiste localement.
-- [ ] Les tests ViewModel passent.
-- [ ] Les tests widget passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] L'utilisateur peut cocher et decocher un repas.
+- [x] La progression calories/macros est correcte.
+- [x] Le suivi est persiste localement.
+- [x] Les tests ViewModel passent.
+- [x] Les tests widget passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
+
+## Notes d'implementation
+
+- Le dashboard utilise les repas du plan du jour actuellement disponibles dans `StaticDesignContentService`, car la generation IA 7 jours reste hors de cette tranche.
+- Les repas coches sont persistes localement par jour avec `shared_preferences`.
+- Le resume calories/macros n'utilise plus les calories consommees statiques : il est calcule depuis les repas coches.
 
 ## Mise a jour obligatoire du fichier global
 

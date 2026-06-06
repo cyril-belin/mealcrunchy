@@ -5,8 +5,13 @@ import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/ui/app.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
   testWidgets('renders the routed MealCrunchy app', (tester) async {
     await tester.pumpWidget(
       MealCrunchyApp(authRepository: _authRepository(account: null)),

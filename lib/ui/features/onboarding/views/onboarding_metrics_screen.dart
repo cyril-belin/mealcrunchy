@@ -4,12 +4,19 @@ import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_colors.dart';
 import 'package:mealcrunchy/ui/core/widgets/app_scaffold.dart';
 import 'package:mealcrunchy/ui/core/widgets/design_primitives.dart';
+import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_model.dart';
+import 'package:provider/provider.dart';
 
 class OnboardingMetricsScreen extends StatelessWidget {
   const OnboardingMetricsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<OnboardingViewModel>();
+    final validationMessage = viewModel.shouldShowProfileValidationMessage
+        ? viewModel.profileValidationMessage
+        : null;
+
     return AppScaffold(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -40,29 +47,54 @@ class OnboardingMetricsScreen extends StatelessWidget {
             ).textTheme.bodyMedium?.copyWith(color: AppColors.secondaryText),
           ),
           const SizedBox(height: 24),
-          const _MetricField(label: 'Age', hint: 'ex. 28', suffix: 'ans'),
+          _MetricField(
+            fieldKey: const ValueKey('onboarding-age-field'),
+            label: 'Age',
+            hint: 'ex. 28',
+            suffix: 'ans',
+            onChanged: viewModel.updateAge,
+          ),
           const SizedBox(height: 14),
-          const _MetricField(label: 'Taille', hint: 'ex. 175', suffix: 'cm'),
+          _MetricField(
+            fieldKey: const ValueKey('onboarding-height-field'),
+            label: 'Taille',
+            hint: 'ex. 175',
+            suffix: 'cm',
+            onChanged: viewModel.updateHeightCm,
+          ),
           const SizedBox(height: 14),
           Row(
-            children: const [
+            children: [
               Expanded(
                 child: _MetricField(
+                  fieldKey: ValueKey('onboarding-current-weight-field'),
                   label: 'Poids actuel',
                   hint: '75',
                   suffix: 'kg',
+                  onChanged: viewModel.updateCurrentWeightKg,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: _MetricField(
+                  fieldKey: ValueKey('onboarding-target-weight-field'),
                   label: 'Poids cible',
                   hint: '70',
                   suffix: 'kg',
+                  onChanged: viewModel.updateTargetWeightKg,
                 ),
               ),
             ],
           ),
+          if (validationMessage != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              validationMessage,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.error),
+            ),
+          ],
           const SizedBox(height: 18),
           SoftCard(
             color: AppColors.info.withValues(alpha: 0.08),
@@ -88,7 +120,15 @@ class OnboardingMetricsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           ElevatedButton(
-            onPressed: () => context.go(AppRoutes.generatingPlan),
+            key: const ValueKey('onboarding-metrics-continue'),
+            onPressed: () {
+              final profile = viewModel.submitProfile();
+              if (profile == null) {
+                return;
+              }
+
+              context.go(AppRoutes.generatingPlan);
+            },
             child: const Text('Continuer'),
           ),
           OutlinedButton(
@@ -103,18 +143,24 @@ class OnboardingMetricsScreen extends StatelessWidget {
 
 class _MetricField extends StatelessWidget {
   const _MetricField({
+    required this.fieldKey,
     required this.label,
     required this.hint,
     required this.suffix,
+    required this.onChanged,
   });
 
+  final Key fieldKey;
   final String label;
   final String hint;
   final String suffix;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
+      key: fieldKey,
+      onChanged: onChanged,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(
         labelText: label,

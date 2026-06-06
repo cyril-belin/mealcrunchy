@@ -35,16 +35,32 @@ class DailyMealPlanScreen extends StatelessWidget {
         ViewData<List<Meal>>(data: final meals),
         ViewData<NutritionSummary>(data: final summary),
       ) =>
-        _MealPlanContent(meals: meals, summary: summary),
+        _MealPlanContent(
+          meals: meals,
+          summary: summary,
+          dayLabel: viewModel.currentDayLabel,
+          isMealConsumed: viewModel.isMealConsumed,
+          onMealConsumedChanged: viewModel.setMealConsumed,
+        ),
     };
   }
 }
 
 class _MealPlanContent extends StatelessWidget {
-  const _MealPlanContent({required this.meals, required this.summary});
+  const _MealPlanContent({
+    required this.meals,
+    required this.summary,
+    required this.dayLabel,
+    required this.isMealConsumed,
+    required this.onMealConsumedChanged,
+  });
 
   final List<Meal> meals;
   final NutritionSummary summary;
+  final String dayLabel;
+  final bool Function(String mealId) isMealConsumed;
+  final Future<bool> Function(String mealId, {required bool consumed})
+  onMealConsumedChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +75,7 @@ class _MealPlanContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Aujourd\'hui, 24 oct.',
+                      dayLabel,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppColors.secondaryText,
                       ),
@@ -148,7 +164,28 @@ class _MealPlanContent extends StatelessWidget {
           ...meals.map(
             (meal) => Padding(
               padding: const EdgeInsets.only(bottom: 14),
-              child: _MealCard(meal: meal),
+              child: _MealCard(
+                meal: meal,
+                consumed: isMealConsumed(meal.id),
+                onConsumedChanged: (consumed) async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final success = await onMealConsumedChanged(
+                    meal.id,
+                    consumed: consumed,
+                  );
+                  if (!success) {
+                    messenger
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Impossible d\'enregistrer le suivi. Reessayez.',
+                          ),
+                        ),
+                      );
+                  }
+                },
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -257,9 +294,15 @@ class _ErrorScaffold extends StatelessWidget {
 }
 
 class _MealCard extends StatelessWidget {
-  const _MealCard({required this.meal});
+  const _MealCard({
+    required this.meal,
+    required this.consumed,
+    required this.onConsumedChanged,
+  });
 
   final Meal meal;
+  final bool consumed;
+  final ValueChanged<bool> onConsumedChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -308,9 +351,20 @@ class _MealCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.chevron_right_rounded,
-              color: AppColors.secondaryText,
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Checkbox(
+                  key: ValueKey('meal-consumed-checkbox-${meal.id}'),
+                  value: consumed,
+                  activeColor: AppColors.primary,
+                  onChanged: (value) => onConsumedChanged(value ?? false),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.secondaryText,
+                ),
+              ],
             ),
           ],
         ),

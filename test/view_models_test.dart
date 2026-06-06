@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/repositories/preferences_repository.dart';
+import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
 import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
@@ -112,7 +113,10 @@ const _preference = PreferenceItem(
 
 class _SuccessfulMealPlanRepository extends MealPlanRepository {
   _SuccessfulMealPlanRepository()
-    : super(contentService: const StaticDesignContentService());
+    : super(
+        contentService: const StaticDesignContentService(),
+        trackingStore: MemoryDailyMealTrackingStore(),
+      );
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_meal];
@@ -123,7 +127,10 @@ class _SuccessfulMealPlanRepository extends MealPlanRepository {
 
 class _ThrowingMealPlanRepository extends MealPlanRepository {
   _ThrowingMealPlanRepository()
-    : super(contentService: const StaticDesignContentService());
+    : super(
+        contentService: const StaticDesignContentService(),
+        trackingStore: MemoryDailyMealTrackingStore(),
+      );
 
   @override
   Future<List<Meal>> getDailyMeals() async => throw Exception('load failed');

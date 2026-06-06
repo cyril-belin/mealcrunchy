@@ -66,20 +66,21 @@ flutter analyze
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
-
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-06 | `flutter test` baseline | `PathNotFoundException` sur `android/app/src/main/kotlin/com/cyrilbelin/mealcrunchy/MainActivity.kt` | Le workspace contenait deja le renommage Android vers `android/app/src/main/kotlin/fr/cyrilbelin/mealcrunchy/MainActivity.kt`, tandis que `test/config/reste_a_faire_config_test.dart` referencait encore l'ancien chemin. | Reference du test de configuration corrigee vers le nouveau chemin Android. | `flutter test test/config/reste_a_faire_config_test.dart`, puis `flutter test` complet valides. |
+| 2026-06-06 | Test widget mesures | Message `Renseignez vos mesures.` affiche des l'arrivee sur l'ecran | Validation calculee avant tentative utilisateur. | Ajout d'une tentative de validation dans `OnboardingViewModel.submitProfile()` et affichage inline seulement apres appui sur continuer. | Test widget `keeps metrics on screen when required values are missing` valide. |
+| 2026-06-06 | Test widget navigation vers generation | Overflow vertical dans `GeneratingPlanScreen` sous viewport de test | Ecran force en `scrollable: false` avec contenu trop haut. | Ecran de generation rendu scrollable via `AppScaffold` par defaut. | Test widget `records metrics and continues to generation after validation` valide. |
 
 ## Checklist de fin
 
-- [ ] Le profil nutritionnel peut etre construit depuis l'onboarding.
-- [ ] Les validations empechent un profil incomplet.
-- [ ] Les tests ViewModel passent.
-- [ ] Les tests widget passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] Le profil nutritionnel peut etre construit depuis l'onboarding.
+- [x] Les validations empechent un profil incomplet.
+- [x] Les tests ViewModel passent.
+- [x] Les tests widget passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
 
 ## Mise a jour obligatoire du fichier global
 
