@@ -84,11 +84,11 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('Regenerer le plan IA'),
+      find.text('Régénérer le plan IA'),
       320,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Regenerer le plan IA'));
+    await tester.tap(find.text('Régénérer le plan IA'));
     await tester.pumpAndSettle();
 
     expect(find.text('Generation reached'), findsOneWidget);

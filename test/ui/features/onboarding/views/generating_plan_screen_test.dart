@@ -22,7 +22,7 @@ void main() {
       _app(repository: _WidgetMealPlanRepository(), profile: _profile),
     );
 
-    expect(find.text('Creation de votre menu ideal...'), findsOneWidget);
+    expect(find.text('Création de votre menu idéal...'), findsOneWidget);
 
     await tester.pumpAndSettle();
 
@@ -37,11 +37,11 @@ void main() {
     expect(find.text('Generation impossible'), findsOneWidget);
 
     await tester.scrollUntilVisible(
-      find.text('Reessayer'),
+      find.text('Réessayer'),
       160,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.tap(find.text('Reessayer'));
+    await tester.tap(find.text('Réessayer'));
     await tester.pumpAndSettle();
 
     expect(repository.generateCount, 2);

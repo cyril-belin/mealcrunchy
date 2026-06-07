@@ -59,7 +59,6 @@ class OnboardingViewModel extends ChangeNotifier {
       title: 'Produits laitiers',
       subtitle: 'Lait, fromage, yaourt',
       iconName: 'ice_cream',
-      selected: true,
     ),
     const OnboardingOption(
       title: 'Cacahuètes',

@@ -16,20 +16,26 @@ void main() {
       expect(viewModel.goals.where((option) => option.selected), hasLength(1));
     });
 
+    test('starts with no allergy pre-selected', () {
+      final viewModel = OnboardingViewModel();
+
+      expect(viewModel.selectedAllergyTitles, isEmpty);
+    });
+
     test('toggles allergies as a multi-selection', () {
       final viewModel = OnboardingViewModel();
 
-      viewModel.toggleAllergy('Cacahuetes');
+      viewModel.toggleAllergy('Cacahuètes');
       viewModel.toggleAllergy('Gluten');
 
       expect(
         viewModel.selectedAllergyTitles,
-        containsAll(<String>['Produits laitiers', 'Cacahuetes', 'Gluten']),
+        containsAll(<String>['Cacahuètes', 'Gluten']),
       );
 
-      viewModel.toggleAllergy('Cacahuetes');
+      viewModel.toggleAllergy('Cacahuètes');
 
-      expect(viewModel.selectedAllergyTitles, isNot(contains('Cacahuetes')));
+      expect(viewModel.selectedAllergyTitles, isNot(contains('Cacahuètes')));
       expect(viewModel.selectedAllergyTitles, contains('Gluten'));
     });
 
@@ -44,8 +50,8 @@ void main() {
     test('builds a valid nutrition profile with selections and metrics', () {
       final viewModel = OnboardingViewModel()
         ..selectGoal('Prendre du muscle')
-        ..selectDietStyle('Mediterraneen')
-        ..selectActivityLevel('Tres actif')
+        ..selectDietStyle('Méditerranéen')
+        ..selectActivityLevel('Très actif')
         ..toggleAllergy('Gluten')
         ..updateCustomAversions('coriandre, champignons')
         ..updateAge('32')
@@ -57,8 +63,8 @@ void main() {
 
       expect(profile, isA<UserProfile>());
       expect(profile?.goal, 'Prendre du muscle');
-      expect(profile?.dietStyle, 'Mediterraneen');
-      expect(profile?.activityLevel, 'Tres actif');
+      expect(profile?.dietStyle, 'Méditerranéen');
+      expect(profile?.activityLevel, 'Très actif');
       expect(profile?.allergies, contains('Gluten'));
       expect(profile?.customAversions, <String>['coriandre', 'champignons']);
       expect(profile?.age, 32);
