@@ -1,4 +1,7 @@
+import 'package:mealcrunchy/domain/models/activity_level.dart';
+import 'package:mealcrunchy/domain/models/diet_style.dart';
 import 'package:mealcrunchy/domain/models/json_readers.dart';
+import 'package:mealcrunchy/domain/models/nutrition_goal.dart';
 
 class UserProfile {
   const UserProfile({
@@ -14,11 +17,11 @@ class UserProfile {
     required this.targetWeightKg,
   });
 
-  final String goal;
-  final String dietStyle;
+  final NutritionGoal goal;
+  final DietStyle dietStyle;
   final List<String> allergies;
   final List<String> customAversions;
-  final String activityLevel;
+  final ActivityLevel activityLevel;
   final List<String> mealTiming;
   final int age;
   final int heightCm;
@@ -27,11 +30,13 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, Object?> json) {
     return UserProfile(
-      goal: readJsonField<String>(json, 'goal'),
-      dietStyle: readJsonField<String>(json, 'dietStyle'),
+      goal: NutritionGoal.fromValue(readJsonField<String>(json, 'goal')),
+      dietStyle: DietStyle.fromValue(readJsonField<String>(json, 'dietStyle')),
       allergies: readStringList(json, 'allergies'),
       customAversions: readStringList(json, 'customAversions'),
-      activityLevel: readJsonField<String>(json, 'activityLevel'),
+      activityLevel: ActivityLevel.fromValue(
+        readJsonField<String>(json, 'activityLevel'),
+      ),
       mealTiming: readStringList(json, 'mealTiming'),
       age: readJsonField<int>(json, 'age'),
       heightCm: readJsonField<int>(json, 'heightCm'),
@@ -42,11 +47,11 @@ class UserProfile {
 
   Map<String, Object?> toJson() {
     return {
-      'goal': goal,
-      'dietStyle': dietStyle,
+      'goal': goal.value,
+      'dietStyle': dietStyle.value,
       'allergies': allergies,
       'customAversions': customAversions,
-      'activityLevel': activityLevel,
+      'activityLevel': activityLevel.value,
       'mealTiming': mealTiming,
       'age': age,
       'heightCm': heightCm,

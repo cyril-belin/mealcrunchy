@@ -4,8 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/domain/models/activity_level.dart';
+import 'package:mealcrunchy/domain/models/diet_style.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
+import 'package:mealcrunchy/domain/models/nutrition_goal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
@@ -79,11 +82,11 @@ Widget _app({
 }
 
 const _profile = UserProfile(
-  goal: 'Perdre du poids',
-  dietStyle: 'Mediterraneen',
+  goal: NutritionGoal.loseWeight,
+  dietStyle: DietStyle.mediterranean,
   allergies: ['Cacahuetes'],
   customAversions: ['Olives'],
-  activityLevel: 'Moderement actif',
+  activityLevel: ActivityLevel.moderatelyActive,
   mealTiming: ['3 repas classiques'],
   age: 32,
   heightCm: 178,

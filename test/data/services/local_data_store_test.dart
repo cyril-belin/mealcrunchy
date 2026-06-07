@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/domain/models/activity_level.dart';
+import 'package:mealcrunchy/domain/models/diet_style.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
+import 'package:mealcrunchy/domain/models/nutrition_goal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
@@ -21,7 +24,7 @@ void main() {
 
       final reloaded = await store.loadUserProfile();
 
-      expect(reloaded?.goal, 'Perdre du poids');
+      expect(reloaded?.goal, NutritionGoal.loseWeight);
       expect(reloaded?.allergies, ['Cacahuetes']);
       expect(reloaded?.currentWeightKg, 82.5);
     });
@@ -96,11 +99,11 @@ void main() {
 }
 
 const _profile = UserProfile(
-  goal: 'Perdre du poids',
-  dietStyle: 'Mediterraneen',
+  goal: NutritionGoal.loseWeight,
+  dietStyle: DietStyle.mediterranean,
   allergies: ['Cacahuetes'],
   customAversions: ['Olives'],
-  activityLevel: 'Moderement actif',
+  activityLevel: ActivityLevel.moderatelyActive,
   mealTiming: ['3 repas classiques'],
   age: 32,
   heightCm: 178,

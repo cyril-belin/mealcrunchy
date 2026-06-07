@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/domain/models/activity_level.dart';
+import 'package:mealcrunchy/domain/models/diet_style.dart';
+import 'package:mealcrunchy/domain/models/nutrition_goal.dart';
 import 'package:mealcrunchy/domain/models/onboarding_option.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 
@@ -231,11 +234,11 @@ class OnboardingViewModel extends ChangeNotifier {
     }
 
     return UserProfile(
-      goal: selectedGoalTitle,
-      dietStyle: selectedDietStyleTitle,
+      goal: NutritionGoal.fromValue(selectedGoalTitle),
+      dietStyle: DietStyle.fromValue(selectedDietStyleTitle),
       allergies: selectedAllergyTitles,
       customAversions: customAversions,
-      activityLevel: selectedActivityLevelTitle,
+      activityLevel: ActivityLevel.fromValue(selectedActivityLevelTitle),
       mealTiming: selectedMealTimingTitles,
       age: age,
       heightCm: heightCm,

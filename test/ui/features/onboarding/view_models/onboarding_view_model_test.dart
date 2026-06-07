@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/domain/models/activity_level.dart';
+import 'package:mealcrunchy/domain/models/diet_style.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
+import 'package:mealcrunchy/domain/models/nutrition_goal.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_model.dart';
@@ -62,9 +65,9 @@ void main() {
       final profile = viewModel.buildProfile();
 
       expect(profile, isA<UserProfile>());
-      expect(profile?.goal, 'Prendre du muscle');
-      expect(profile?.dietStyle, 'Méditerranéen');
-      expect(profile?.activityLevel, 'Très actif');
+      expect(profile?.goal, NutritionGoal.buildMuscle);
+      expect(profile?.dietStyle, DietStyle.mediterranean);
+      expect(profile?.activityLevel, ActivityLevel.veryActive);
       expect(profile?.allergies, contains('Gluten'));
       expect(profile?.customAversions, <String>['coriandre', 'champignons']);
       expect(profile?.age, 32);
