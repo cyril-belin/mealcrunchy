@@ -277,7 +277,11 @@ class OnboardingViewModel extends ChangeNotifier {
   }
 
   String _selectedTitle(List<OnboardingOption> options) {
-    return options.firstWhere((option) => option.selected).title;
+    final selected = options.firstWhere(
+      (option) => option.selected,
+      orElse: () => options.first,
+    );
+    return selected.title;
   }
 
   List<String> _selectedTitles(List<OnboardingOption> options) {
