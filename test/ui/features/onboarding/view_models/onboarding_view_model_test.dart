@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
-import 'package:mealcrunchy/domain/models/meal.dart';
-import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_model.dart';
@@ -88,7 +87,7 @@ class _SavingLocalDataStore implements LocalDataStore {
   UserProfile? savedProfile;
 
   @override
-  Future<LocalMealPlan?> loadActiveMealPlan() async => null;
+  Future<MealPlan?> loadActiveMealPlan() async => null;
 
   @override
   Future<Set<String>> loadConsumedMealIds(String dayKey) async => <String>{};
@@ -102,10 +101,7 @@ class _SavingLocalDataStore implements LocalDataStore {
   Future<UserProfile?> loadUserProfile() async => null;
 
   @override
-  Future<void> saveActiveMealPlan({
-    required List<Meal> meals,
-    required NutritionSummary summary,
-  }) async {}
+  Future<void> saveActiveMealPlan(MealPlan plan) async {}
 
   @override
   Future<void> saveConsumedMealIds(String dayKey, Set<String> ids) async {}

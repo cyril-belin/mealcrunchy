@@ -113,10 +113,7 @@ const _preference = PreferenceItem(
 
 class _SuccessfulMealPlanRepository extends MealPlanRepository {
   _SuccessfulMealPlanRepository()
-    : super(
-        contentService: const StaticDesignContentService(),
-        trackingStore: MemoryDailyMealTrackingStore(),
-      );
+    : super(trackingStore: MemoryDailyMealTrackingStore());
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_meal];
@@ -127,10 +124,7 @@ class _SuccessfulMealPlanRepository extends MealPlanRepository {
 
 class _ThrowingMealPlanRepository extends MealPlanRepository {
   _ThrowingMealPlanRepository()
-    : super(
-        contentService: const StaticDesignContentService(),
-        trackingStore: MemoryDailyMealTrackingStore(),
-      );
+    : super(trackingStore: MemoryDailyMealTrackingStore());
 
   @override
   Future<List<Meal>> getDailyMeals() async => throw Exception('load failed');

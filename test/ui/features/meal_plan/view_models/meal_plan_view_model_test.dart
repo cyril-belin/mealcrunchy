@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
-import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
@@ -124,7 +123,6 @@ class _TrackingMealPlanRepository extends MealPlanRepository {
     DailyMealTrackingStore? store,
     Set<String> initiallyConsumedMealIds = const {},
   }) : super(
-         contentService: const StaticDesignContentService(),
          trackingStore:
              store ??
              MemoryDailyMealTrackingStore(

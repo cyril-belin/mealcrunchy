@@ -30,7 +30,7 @@ Chaque nouvelle fonctionnalite doit etre traitee dans une nouvelle fenetre ou un
 | 2 | Onboarding profil nutritionnel | Terminee | [onboarding-profil-nutritionnel.md](onboarding-profil-nutritionnel.md) |
 | 3 | Stockage local des donnees | Terminee | [stockage-local-donnees.md](stockage-local-donnees.md) |
 | 4 | Proxy Firebase OpenAI | Terminee | [proxy-firebase-openai.md](proxy-firebase-openai.md) |
-| 5 | Generation plan IA 7 jours | A faire | [generation-plan-ia-7-jours.md](generation-plan-ia-7-jours.md) |
+| 5 | Generation plan IA 7 jours | Terminee | [generation-plan-ia-7-jours.md](generation-plan-ia-7-jours.md) |
 | 6 | Dashboard suivi quotidien | Terminee | [dashboard-suivi-quotidien.md](dashboard-suivi-quotidien.md) |
 | 7 | Detail repas | Terminee | [detail-repas.md](detail-repas.md) |
 | 8 | Remplacement repas | A faire | [remplacement-repas.md](remplacement-repas.md) |
@@ -58,10 +58,10 @@ Pour chaque fonctionnalite :
 
 ## Derniere mise a jour
 
-- Date : 2026-06-06
-- Changement : proxy Firebase OpenAI termine avec Functions v2 `generateMealPlan`/`replaceMeal`, secret `OPENAI_API_KEY`, Responses API Structured Outputs, service Flutter `AiProxyService`, tests Functions/service, `flutter test`, `flutter analyze` et MCP Dart valides.
+- Date : 2026-06-07
+- Changement : generation plan IA 7 jours terminee avec modele `MealPlan`, stockage local du plan 7 jours, repository branche sur `AiProxyService.generateMealPlan`, ecran de generation loading/succes/erreur/retry, dashboard sans fallback statique repas, tests modele/repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart valides.
 - Fonctionnalite active : aucune.
-- Prochaine fonctionnalite autorisee : Generation plan IA 7 jours.
+- Prochaine fonctionnalite autorisee : Remplacement repas.
 
 ## Erreurs importantes rencontrees
 
@@ -76,6 +76,8 @@ Pour chaque fonctionnalite :
 | 2026-06-06 | Stockage local des donnees | `SharedPreferencesAsyncPlatform instance must be set` dans les tests widget | `MealCrunchyApp` rend `LocalDataStore` injectable et les tests widget utilisent un faux store local. |
 | 2026-06-06 | Proxy Firebase OpenAI | `npm install` bloque par le reseau sandbox, puis avertissement Node local 24 vs runtime Functions Node 22 | Installation relancee avec permission reseau ; runtime Firebase conserve en `nodejs22`, tests Functions valides. |
 | 2026-06-06 | Proxy Firebase OpenAI | MCP Flutter / DTD non connecte pendant la verification | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests Functions, tests Flutter, MCP Dart `analyze_files`, `flutter test` et `flutter analyze`. |
+| 2026-06-07 | Generation plan IA 7 jours | `widget_test.dart` attendait encore le repas statique `Toast avocat et oeuf` apres suppression du fallback repas | Test global mis a jour avec un `MealPlan` IA local de 7 jours ; `flutter test` relance avec succes. |
+| 2026-06-07 | Generation plan IA 7 jours | MCP Flutter / DTD connecte mais aucune app Flutter active disponible | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files`. |
 
 ## Historique de validation
 
@@ -89,3 +91,4 @@ Pour chaque fonctionnalite :
 | 2026-06-06 | Detail repas | Terminee | Detail en lecture seule, coherence dashboard/detail, etat repas introuvable, tests ViewModel/widget, `flutter test` et `flutter analyze` valides. |
 | 2026-06-06 | Stockage local des donnees | Terminee | Service `LocalDataStore` via `SharedPreferencesAsync`, serialisation profil/plan/suivi/courses data-layer, injection app/test, tests lecture/ecriture/JSON invalide, `flutter pub get`, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
 | 2026-06-06 | Proxy Firebase OpenAI | Terminee | Firebase Functions TypeScript v2 avec `generateMealPlan` et `replaceMeal`, validation entree/sortie, secret `OPENAI_API_KEY`, client OpenAI Responses Structured Outputs, service Flutter `AiProxyService`, tests Functions/service, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
+| 2026-06-07 | Generation plan IA 7 jours | Terminee | Modele `MealPlan`/`MealPlanDay`, parsing plan IA 7 jours, stockage local du plan complet, repository sans fallback statique repas, ecran generation connecte au proxy, retry erreur, regeneration depuis dashboard, tests complets, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |

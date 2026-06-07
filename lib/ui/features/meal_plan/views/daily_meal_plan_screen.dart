@@ -225,17 +225,7 @@ class _MealPlanContent extends StatelessWidget {
           ),
           const SizedBox(height: 22),
           OutlinedButton.icon(
-            onPressed: () {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'La regeneration du plan n\'est pas encore connectee.',
-                    ),
-                  ),
-                );
-            },
+            onPressed: () => context.go(AppRoutes.generatingPlan),
             icon: const Icon(Icons.auto_awesome_rounded),
             label: const Text('Regenerer le plan IA'),
           ),
@@ -279,7 +269,13 @@ class _ErrorScaffold extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            OutlinedButton.icon(
+            ElevatedButton.icon(
+              onPressed: () => context.go(AppRoutes.generatingPlan),
+              icon: const Icon(Icons.auto_awesome_rounded),
+              label: const Text('Generer un plan'),
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
               onPressed: () {
                 onRetry();
               },

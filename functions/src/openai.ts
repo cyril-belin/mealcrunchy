@@ -7,7 +7,7 @@ import type {
 type FetchLike = typeof fetch;
 
 const responsesUrl = "https://api.openai.com/v1/responses";
-const defaultModel = "gpt-5-mini";
+const defaultModel = "gpt-4.1-mini";
 
 export function buildOpenAiDependencies(options: {
   apiKey: () => string;

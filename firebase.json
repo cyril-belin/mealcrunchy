@@ -65,6 +65,11 @@
       }
     }
   },
+  "emulators": {
+    "functions": {
+      "port": 5001
+    }
+  },
   "functions": {
     "source": "functions",
     "runtime": "nodejs22",

@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
-import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
@@ -70,6 +69,30 @@ void main() {
     expect(find.text('82g'), findsOneWidget);
     expect(find.text('19g'), findsOneWidget);
   });
+
+  testWidgets('regenerate button navigates to the generation screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _DashboardRouterTestApp(
+        viewModel: MealPlanViewModel(
+          mealPlanRepository: _DashboardMealPlanRepository(),
+          now: () => DateTime(2026, 6, 6),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Regenerer le plan IA'),
+      320,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Regenerer le plan IA'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Generation reached'), findsOneWidget);
+  });
 }
 
 class _DashboardTestApp extends StatelessWidget {
@@ -107,6 +130,11 @@ class _DashboardRouterTestApp extends StatelessWidget {
               mealId: state.pathParameters['mealId'] ?? '',
             );
           },
+        ),
+        GoRoute(
+          path: AppRoutes.generatingPlan,
+          builder: (context, state) =>
+              const Material(child: Center(child: Text('Generation reached'))),
         ),
       ],
     );
@@ -161,10 +189,7 @@ const _coherenceBreakfast = Meal(
 
 class _DashboardMealPlanRepository extends MealPlanRepository {
   _DashboardMealPlanRepository()
-    : super(
-        contentService: const StaticDesignContentService(),
-        trackingStore: MemoryDailyMealTrackingStore(),
-      );
+    : super(trackingStore: MemoryDailyMealTrackingStore());
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_breakfast];
@@ -175,10 +200,7 @@ class _DashboardMealPlanRepository extends MealPlanRepository {
 
 class _CoherenceMealPlanRepository extends MealPlanRepository {
   _CoherenceMealPlanRepository()
-    : super(
-        contentService: const StaticDesignContentService(),
-        trackingStore: MemoryDailyMealTrackingStore(),
-      );
+    : super(trackingStore: MemoryDailyMealTrackingStore());
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_coherenceBreakfast];
