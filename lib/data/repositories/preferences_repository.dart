@@ -44,13 +44,13 @@ class PreferencesRepository {
     return [
       PreferenceItem(
         title: 'Objectifs santé',
-        value: profile.goal,
+        value: profile.goal.value,
         iconName: 'target',
         colorToken: 'info',
       ),
       PreferenceItem(
         title: 'Régime alimentaire',
-        value: profile.dietStyle,
+        value: profile.dietStyle.value,
         iconName: 'restaurant',
         colorToken: 'success',
       ),
@@ -62,7 +62,7 @@ class PreferencesRepository {
       ),
       PreferenceItem(
         title: 'Niveau d\'activité',
-        value: profile.activityLevel,
+        value: profile.activityLevel.value,
         iconName: 'fitness',
         colorToken: 'warning',
       ),

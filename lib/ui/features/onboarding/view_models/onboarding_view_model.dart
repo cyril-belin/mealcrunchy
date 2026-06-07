@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/domain/models/activity_level.dart';
+import 'package:mealcrunchy/domain/models/diet_style.dart';
+import 'package:mealcrunchy/domain/models/nutrition_goal.dart';
 import 'package:mealcrunchy/domain/models/onboarding_option.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 
@@ -59,7 +62,6 @@ class OnboardingViewModel extends ChangeNotifier {
       title: 'Produits laitiers',
       subtitle: 'Lait, fromage, yaourt',
       iconName: 'ice_cream',
-      selected: true,
     ),
     const OnboardingOption(
       title: 'Cacahuètes',
@@ -232,11 +234,11 @@ class OnboardingViewModel extends ChangeNotifier {
     }
 
     return UserProfile(
-      goal: selectedGoalTitle,
-      dietStyle: selectedDietStyleTitle,
+      goal: NutritionGoal.fromValue(selectedGoalTitle),
+      dietStyle: DietStyle.fromValue(selectedDietStyleTitle),
       allergies: selectedAllergyTitles,
       customAversions: customAversions,
-      activityLevel: selectedActivityLevelTitle,
+      activityLevel: ActivityLevel.fromValue(selectedActivityLevelTitle),
       mealTiming: selectedMealTimingTitles,
       age: age,
       heightCm: heightCm,
@@ -275,7 +277,11 @@ class OnboardingViewModel extends ChangeNotifier {
   }
 
   String _selectedTitle(List<OnboardingOption> options) {
-    return options.firstWhere((option) => option.selected).title;
+    final selected = options.firstWhere(
+      (option) => option.selected,
+      orElse: () => options.first,
+    );
+    return selected.title;
   }
 
   List<String> _selectedTitles(List<OnboardingOption> options) {
