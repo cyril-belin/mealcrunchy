@@ -106,10 +106,7 @@ class _OnboardingTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        IconButton(
-          onPressed: () => context.go(AppRoutes.auth),
-          icon: const Icon(Icons.arrow_back_rounded),
-        ),
+        const SizedBox(width: 48),
         Expanded(child: ProgressPill(progress: progress)),
         const SizedBox(width: 12),
         Text(stepLabel, style: Theme.of(context).textTheme.labelMedium),

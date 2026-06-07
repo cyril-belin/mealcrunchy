@@ -62,14 +62,19 @@ class MealCrunchyApp extends StatelessWidget {
             );
           },
         ),
-        ChangeNotifierProxyProvider<AuthRepository, AuthViewModel>(
+        ChangeNotifierProxyProvider2<AuthRepository, LocalDataStore, AuthViewModel>(
           create: (context) {
             return AuthViewModel(
               authRepository: context.read<AuthRepository>(),
+              localDataStore: context.read<LocalDataStore>(),
             );
           },
-          update: (_, repository, previous) {
-            return previous ?? AuthViewModel(authRepository: repository);
+          update: (_, repository, localDataStore, previous) {
+            return previous ??
+                AuthViewModel(
+                  authRepository: repository,
+                  localDataStore: localDataStore,
+                );
           },
         ),
         ChangeNotifierProvider(
