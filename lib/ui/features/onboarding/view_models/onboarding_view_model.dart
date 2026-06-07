@@ -1,8 +1,13 @@
 import 'package:flutter/foundation.dart';
+import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/onboarding_option.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 
 class OnboardingViewModel extends ChangeNotifier {
+  OnboardingViewModel({this.localDataStore});
+
+  final LocalDataStore? localDataStore;
+
   final List<OnboardingOption> _goals = [
     const OnboardingOption(
       title: 'Perdre du poids',
@@ -203,9 +208,12 @@ class OnboardingViewModel extends ChangeNotifier {
     apply: (nextValue) => _targetWeightKgInput = nextValue,
   );
 
-  UserProfile? submitProfile() {
+  Future<UserProfile?> submitProfile() async {
     _profileValidationRequested = true;
     final profile = buildProfile();
+    if (profile != null) {
+      await localDataStore?.saveUserProfile(profile);
+    }
     notifyListeners();
     return profile;
   }

@@ -6,6 +6,7 @@ import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/ui/app.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'helpers/fake_local_data_store.dart';
 
 void main() {
   setUp(() {
@@ -14,7 +15,10 @@ void main() {
 
   testWidgets('renders the routed MealCrunchy app', (tester) async {
     await tester.pumpWidget(
-      MealCrunchyApp(authRepository: _authRepository(account: null)),
+      MealCrunchyApp(
+        authRepository: _authRepository(account: null),
+        localDataStore: FakeLocalDataStore(),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -32,6 +36,7 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: _account),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.mealDetailsFor('avocado-toast'),
       ),
     );
@@ -55,6 +60,7 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: null),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.auth,
       ),
     );
@@ -74,6 +80,7 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: _account),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.onboardingGoals,
       ),
     );
@@ -107,6 +114,7 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: _account),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.mealDetailsFor('avocado-toast'),
       ),
     );

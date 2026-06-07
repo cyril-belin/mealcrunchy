@@ -61,32 +61,55 @@ Creer un proxy serverless Firebase qui appelle OpenAI sans exposer la cle API da
 
 ## Commandes de validation
 
-Les commandes exactes dependront de la configuration Firebase creee pendant l'implementation. Au minimum :
+Commandes executees pendant l'implementation :
 
 ```bash
+npm install --prefix functions
+npm test --prefix functions
+flutter test test/data/services/ai_proxy_service_test.dart
 flutter test
 flutter analyze
+MCP Dart analyze_files
 ```
 
-Pour les functions, ajouter ici les commandes executees dans la fenetre dediee.
+Commande Firebase a executer avant un deploiement reel, sans jamais commiter la valeur du secret :
+
+```bash
+firebase functions:secrets:set OPENAI_API_KEY
+```
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
+Le proxy utilise Firebase Functions v2 callable en region `europe-west1`, un secret `OPENAI_API_KEY`, et l'API OpenAI Responses avec Structured Outputs.
 
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-06 | `npm install` dans `functions/` | Installation bloquee sans sortie dans la sandbox | Acces reseau restreint pendant le telechargement npm | Processus interrompu puis `npm install` relance avec permission reseau | `npm test --prefix functions` OK |
+| 2026-06-06 | `npm install` dans `functions/` | `EBADENGINE` local | Le projet Functions cible Node 22, la machine locale utilise Node 24.15.0 | Aucune correction necessaire pour le runtime Firebase `nodejs22`; avertissement documente | `npm test --prefix functions` OK |
+| 2026-06-06 | `npm audit` implicite | 9 vulnerabilites moderees dans l'arbre npm | Dependances transitives Firebase/npm | Documente pour suivi ; pas de `npm audit fix --force` afin d'eviter une mise a jour cassante hors scope | Build et tests Functions OK |
+| 2026-06-06 | `npm test --prefix functions` apres tests rouges | `Cannot find module './proxy'` | Test ecrit avant implementation TDD | Ajout des handlers purs `buildGenerateMealPlanHandler` et `buildReplaceMealHandler` | `npm test --prefix functions` OK |
+| 2026-06-06 | `flutter test test/data/services/ai_proxy_service_test.dart` apres tests rouges | `ai_proxy_service.dart` introuvable | Test Flutter ecrit avant implementation TDD | Ajout de `cloud_functions` et du service `AiProxyService` injectable | Test service OK |
+| 2026-06-06 | MCP Flutter `widget_inspector get_widget_tree` | DTD non connecte | Aucune application Flutter active connectee au Dart Tooling Daemon | Absence documentee ; validation realisee par tests unitaires/service et analyse statique | `flutter test`, `flutter analyze`, MCP Dart OK |
 
 ## Checklist de fin
 
-- [ ] La cle OpenAI n'est jamais exposee cote Flutter.
-- [ ] Les functions valident les entrees.
-- [ ] Les functions valident les sorties OpenAI.
-- [ ] Les erreurs sont documentees.
-- [ ] Les tests functions ou tests de service passent.
-- [ ] `flutter test` passe pour la partie Flutter.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] La cle OpenAI n'est jamais exposee cote Flutter.
+- [x] Les functions valident les entrees.
+- [x] Les functions valident les sorties OpenAI.
+- [x] Les erreurs sont documentees.
+- [x] Les tests functions ou tests de service passent.
+- [x] `flutter test` passe pour la partie Flutter.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
+
+## Validation finale
+
+- `npm test --prefix functions` : OK, 6 tests Functions.
+- `flutter test test/data/services/ai_proxy_service_test.dart` : OK, 5 tests service.
+- `flutter test` : OK, 78 tests.
+- `flutter analyze` : OK, aucune erreur.
+- MCP Dart `analyze_files` : OK, aucune erreur.
+- MCP Flutter / widget inspector : DTD non connecte, absence documentee ci-dessus.
 
 ## Mise a jour obligatoire du fichier global
 

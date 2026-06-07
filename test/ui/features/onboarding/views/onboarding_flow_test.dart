@@ -5,6 +5,7 @@ import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/ui/app.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
+import '../../../../helpers/fake_local_data_store.dart';
 
 void main() {
   testWidgets('navigates from goals to allergies and updates a selection', (
@@ -93,6 +94,7 @@ void main() {
 MealCrunchyApp _app({required String initialLocation}) {
   return MealCrunchyApp(
     authRepository: AuthRepository(service: _AuthService()),
+    localDataStore: FakeLocalDataStore(),
     initialLocation: initialLocation,
   );
 }

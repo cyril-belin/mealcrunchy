@@ -121,9 +121,13 @@ class OnboardingMetricsScreen extends StatelessWidget {
           const SizedBox(height: 24),
           ElevatedButton(
             key: const ValueKey('onboarding-metrics-continue'),
-            onPressed: () {
-              final profile = viewModel.submitProfile();
+            onPressed: () async {
+              final profile = await viewModel.submitProfile();
               if (profile == null) {
+                return;
+              }
+
+              if (!context.mounted) {
                 return;
               }
 

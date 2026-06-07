@@ -40,7 +40,10 @@ void main() {
       final repository = _TrackingMealPlanRepository(
         initiallyConsumedMealIds: {'breakfast', 'lunch'},
       );
-      final viewModel = MealPlanViewModel(mealPlanRepository: repository);
+      final viewModel = MealPlanViewModel(
+        mealPlanRepository: repository,
+        now: () => DateTime(2026, 6, 6),
+      );
       await Future<void>.delayed(Duration.zero);
 
       await viewModel.setMealConsumed('breakfast', consumed: false);
