@@ -6,13 +6,13 @@ import 'package:mealcrunchy/ui/core/state/view_state.dart';
 
 class MealPlanViewModel extends ChangeNotifier {
   MealPlanViewModel({
-    required this.mealPlanRepository,
+    required this._mealPlanRepository,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now {
     load();
   }
 
-  final MealPlanRepository mealPlanRepository;
+  final MealPlanRepository _mealPlanRepository;
   final DateTime Function() _now;
 
   ViewState<List<Meal>> mealsState = const ViewLoading();
@@ -48,9 +48,9 @@ class MealPlanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final meals = await mealPlanRepository.getDailyMeals();
-      final targetSummary = await mealPlanRepository.getNutritionSummary();
-      final consumedMealIds = await mealPlanRepository.getConsumedMealIds(
+      final meals = await _mealPlanRepository.getDailyMeals();
+      final targetSummary = await _mealPlanRepository.getNutritionSummary();
+      final consumedMealIds = await _mealPlanRepository.getConsumedMealIds(
         _dayKey,
       );
       _consumedMealIds = consumedMealIds;
@@ -87,7 +87,7 @@ class MealPlanViewModel extends ChangeNotifier {
     }
 
     try {
-      await mealPlanRepository.saveConsumedMealIds(
+      await _mealPlanRepository.saveConsumedMealIds(
         _dayKey,
         nextConsumedMealIds,
       );
@@ -116,7 +116,7 @@ class MealPlanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final updatedPlan = await mealPlanRepository.replaceMeal(mealId);
+      final updatedPlan = await _mealPlanRepository.replaceMeal(mealId);
       final updatedMeals = updatedPlan.dayFor(_now()).meals;
       _targetSummary = updatedPlan.summary;
       mealsState = ViewData(updatedMeals);

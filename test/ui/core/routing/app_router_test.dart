@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/auth_repository.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
+import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
@@ -133,10 +134,14 @@ class _RouterTestApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthViewModel>.value(value: authViewModel),
-        ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
+        ChangeNotifierProvider(
+          create: (_) =>
+              OnboardingViewModel(localDataStore: _FakeLocalDataStore()),
+        ),
         ChangeNotifierProvider<MealPlanViewModel>(
           create: (_) => MealPlanViewModel(
             mealPlanRepository: MealPlanRepository(
+              aiProxyService: _UnusedAiProxyService(),
               localDataStore: _FakeLocalDataStore(hasMealPlan: true),
             ),
           ),
@@ -219,6 +224,17 @@ class _FakeLocalDataStore implements LocalDataStore {
 
   @override
   Future<void> saveShoppingList(List<ShoppingListItem> items) async {}
+}
+
+class _UnusedAiProxyService extends AiProxyService {
+  _UnusedAiProxyService() : super(client: _UnusedAiCallableClient());
+}
+
+class _UnusedAiCallableClient implements AiCallableClient {
+  @override
+  Future<Object?> call(String name, Map<String, Object?> data) {
+    throw UnimplementedError();
+  }
 }
 
 MealPlan _stubMealPlan() {
