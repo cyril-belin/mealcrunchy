@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
@@ -42,18 +43,40 @@ void main() {
     );
     expect(find.text('Retour au plan'), findsOneWidget);
   });
+
+  testWidgets('shows an error when meal replacement fails', (tester) async {
+    await tester.pumpWidget(
+      _MealDetailsTestApp(
+        mealId: _dinner.id,
+        repository: _ThrowingDetailsMealPlanRepository(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Remplacer'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Remplacer'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Alternative IA indisponible.'), findsOneWidget);
+  });
 }
 
 class _MealDetailsTestApp extends StatelessWidget {
-  const _MealDetailsTestApp({required this.mealId});
+  const _MealDetailsTestApp({required this.mealId, this.repository});
 
   final String mealId;
+  final MealPlanRepository? repository;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MealPlanViewModel>(
-      create: (_) =>
-          MealPlanViewModel(mealPlanRepository: _DetailsMealPlanRepository()),
+      create: (_) => MealPlanViewModel(
+        mealPlanRepository: repository ?? _DetailsMealPlanRepository(),
+      ),
       child: MaterialApp(
         title: 'MealCrunchy',
         theme: AppTheme.light(),
@@ -95,4 +118,11 @@ class _DetailsMealPlanRepository extends MealPlanRepository {
 
   @override
   Future<NutritionSummary> getNutritionSummary() async => _targetSummary;
+}
+
+class _ThrowingDetailsMealPlanRepository extends _DetailsMealPlanRepository {
+  @override
+  Future<MealPlan> replaceMeal(String mealId) async {
+    throw const MealPlanReplacementException('Alternative IA indisponible.');
+  }
 }

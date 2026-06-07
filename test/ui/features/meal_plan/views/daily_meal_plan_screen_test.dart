@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
@@ -68,6 +69,30 @@ void main() {
     expect(find.text('43g'), findsOneWidget);
     expect(find.text('82g'), findsOneWidget);
     expect(find.text('19g'), findsOneWidget);
+  });
+
+  testWidgets('replace action updates one meal from the dashboard', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _DashboardTestApp(
+        viewModel: MealPlanViewModel(
+          mealPlanRepository: _ReplacingDashboardMealPlanRepository(),
+          now: () => DateTime(2026, 6, 6),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Breakfast'), findsOneWidget);
+
+    await tester.tap(
+      find.byKey(const ValueKey('meal-replace-button-breakfast')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Breakfast remplace'), findsOneWidget);
+    expect(find.text('Repas remplacé.'), findsOneWidget);
   });
 
   testWidgets('regenerate button navigates to the generation screen', (
@@ -187,6 +212,33 @@ const _coherenceBreakfast = Meal(
   instructions: ['Instruction coherence'],
 );
 
+const _replacementBreakfast = Meal(
+  id: 'breakfast',
+  type: 'PETIT-DEJEUNER',
+  name: 'Breakfast remplace',
+  calories: 500,
+  protein: 38,
+  carbs: 42,
+  fat: 16,
+  imagePrompt: 'replacement breakfast',
+  duration: '12 min',
+  ingredients: ['Ingredient remplace'],
+  instructions: ['Instruction remplace'],
+);
+
+final _replacementPlan = MealPlan(
+  generatedAt: DateTime.utc(2026, 6, 6),
+  days: List.generate(
+    7,
+    (index) => MealPlanDay(
+      id: 'day-${index + 1}',
+      label: 'Jour ${index + 1}',
+      meals: index == 0 ? const [_replacementBreakfast] : const [_breakfast],
+    ),
+  ),
+  summary: _targetSummary,
+);
+
 class _DashboardMealPlanRepository extends MealPlanRepository {
   _DashboardMealPlanRepository()
     : super(trackingStore: MemoryDailyMealTrackingStore());
@@ -207,4 +259,10 @@ class _CoherenceMealPlanRepository extends MealPlanRepository {
 
   @override
   Future<NutritionSummary> getNutritionSummary() async => _targetSummary;
+}
+
+class _ReplacingDashboardMealPlanRepository
+    extends _DashboardMealPlanRepository {
+  @override
+  Future<MealPlan> replaceMeal(String mealId) async => _replacementPlan;
 }

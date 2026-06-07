@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
@@ -78,6 +81,73 @@ void main() {
       expect(secondViewModel.isMealConsumed('breakfast'), isTrue);
       expect(summary.data.consumedCalories, 400);
     });
+
+    test('exposes loading for the meal currently being replaced', () async {
+      final replacementCompleter = Completer<MealPlan>();
+      final repository = _ReplacingMealPlanRepository(
+        replacementCompleter: replacementCompleter,
+      );
+      final viewModel = MealPlanViewModel(
+        mealPlanRepository: repository,
+        now: () => DateTime(2026, 6, 6),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      final replaceFuture = viewModel.replaceMeal('breakfast');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(viewModel.replacingMealId, 'breakfast');
+
+      replacementCompleter.complete(_replacementPlan);
+      expect(await replaceFuture, isTrue);
+      expect(viewModel.replacingMealId, isNull);
+    });
+
+    test(
+      'updates meals and consumed summary after replacement succeeds',
+      () async {
+        final repository = _ReplacingMealPlanRepository(
+          initiallyConsumedMealIds: {'breakfast'},
+        );
+        final viewModel = MealPlanViewModel(
+          mealPlanRepository: repository,
+          now: () => DateTime(2026, 6, 6),
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        final success = await viewModel.replaceMeal('breakfast');
+
+        final meals = (viewModel.mealsState as ViewData<List<Meal>>).data;
+        final summary = viewModel.summaryState as ViewData<NutritionSummary>;
+        expect(success, isTrue);
+        expect(meals.first.name, 'Breakfast remplace');
+        expect(meals[1], same(_lunch));
+        expect(summary.data.consumedCalories, 500);
+        expect(viewModel.replacementErrorMessage, isNull);
+      },
+    );
+
+    test(
+      'keeps current meals and exposes an error when replacement fails',
+      () async {
+        final viewModel = MealPlanViewModel(
+          mealPlanRepository: _ThrowingReplacementMealPlanRepository(),
+          now: () => DateTime(2026, 6, 6),
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        final success = await viewModel.replaceMeal('breakfast');
+
+        final meals = (viewModel.mealsState as ViewData<List<Meal>>).data;
+        expect(success, isFalse);
+        expect(meals.first.name, 'Breakfast');
+        expect(viewModel.replacingMealId, isNull);
+        expect(
+          viewModel.replacementErrorMessage,
+          'Alternative IA indisponible.',
+        );
+      },
+    );
   });
 }
 
@@ -109,6 +179,20 @@ const _lunch = Meal(
   instructions: ['Instruction'],
 );
 
+const _replacementBreakfast = Meal(
+  id: 'breakfast',
+  type: 'PETIT-DEJEUNER',
+  name: 'Breakfast remplace',
+  calories: 500,
+  protein: 38,
+  carbs: 42,
+  fat: 16,
+  imagePrompt: 'replacement breakfast',
+  duration: '12 min',
+  ingredients: ['Ingredient remplace'],
+  instructions: ['Instruction remplace'],
+);
+
 const _targetSummary = NutritionSummary(
   consumedCalories: 1850,
   targetCalories: 2000,
@@ -116,6 +200,21 @@ const _targetSummary = NutritionSummary(
   proteinPercent: 30,
   carbsPercent: 45,
   fatPercent: 25,
+);
+
+final _replacementPlan = MealPlan(
+  generatedAt: DateTime.utc(2026, 6, 6),
+  days: List.generate(
+    7,
+    (index) => MealPlanDay(
+      id: 'day-${index + 1}',
+      label: 'Jour ${index + 1}',
+      meals: index == 0
+          ? const [_replacementBreakfast, _lunch]
+          : const [_breakfast, _lunch],
+    ),
+  ),
+  summary: _targetSummary,
 );
 
 class _TrackingMealPlanRepository extends MealPlanRepository {
@@ -137,4 +236,26 @@ class _TrackingMealPlanRepository extends MealPlanRepository {
 
   @override
   Future<NutritionSummary> getNutritionSummary() async => _targetSummary;
+}
+
+class _ReplacingMealPlanRepository extends _TrackingMealPlanRepository {
+  _ReplacingMealPlanRepository({
+    super.initiallyConsumedMealIds,
+    this._replacementCompleter,
+  });
+
+  final Completer<MealPlan>? _replacementCompleter;
+
+  @override
+  Future<MealPlan> replaceMeal(String mealId) async {
+    return _replacementCompleter?.future ?? _replacementPlan;
+  }
+}
+
+class _ThrowingReplacementMealPlanRepository
+    extends _TrackingMealPlanRepository {
+  @override
+  Future<MealPlan> replaceMeal(String mealId) async {
+    throw const MealPlanReplacementException('Alternative IA indisponible.');
+  }
 }

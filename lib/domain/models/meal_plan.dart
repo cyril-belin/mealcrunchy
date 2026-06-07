@@ -42,6 +42,36 @@ class MealPlan {
     };
   }
 
+  MealPlan replaceMeal(Meal replacement) {
+    var didReplace = false;
+    final updatedDays = days
+        .map((day) {
+          final updatedMeals = day.meals
+              .map((meal) {
+                if (meal.id != replacement.id) {
+                  return meal;
+                }
+
+                didReplace = true;
+                return replacement;
+              })
+              .toList(growable: false);
+
+          return MealPlanDay(id: day.id, label: day.label, meals: updatedMeals);
+        })
+        .toList(growable: false);
+
+    if (!didReplace) {
+      throw const FormatException('Replacement meal was not found in plan.');
+    }
+
+    return MealPlan(
+      generatedAt: generatedAt,
+      days: updatedDays,
+      summary: summary,
+    );
+  }
+
   MealPlanDay dayFor(DateTime date) {
     final start = DateTime.utc(
       generatedAt.year,

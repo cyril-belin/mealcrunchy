@@ -17,6 +17,8 @@ class MealPlanViewModel extends ChangeNotifier {
 
   ViewState<List<Meal>> mealsState = const ViewLoading();
   ViewState<NutritionSummary> summaryState = const ViewLoading();
+  String? replacingMealId;
+  String? replacementErrorMessage;
   Set<String> _consumedMealIds = <String>{};
   NutritionSummary? _targetSummary;
 
@@ -95,6 +97,39 @@ class MealPlanViewModel extends ChangeNotifier {
       return true;
     } catch (_) {
       return false;
+    }
+  }
+
+  Future<bool> replaceMeal(String mealId) async {
+    final meals = switch (mealsState) {
+      ViewData<List<Meal>>(data: final data) => data,
+      _ => null,
+    };
+    final targetSummary = _targetSummary;
+
+    if (meals == null || targetSummary == null || replacingMealId != null) {
+      return false;
+    }
+
+    replacingMealId = mealId;
+    replacementErrorMessage = null;
+    notifyListeners();
+
+    try {
+      final updatedPlan = await mealPlanRepository.replaceMeal(mealId);
+      final updatedMeals = updatedPlan.dayFor(_now()).meals;
+      _targetSummary = updatedPlan.summary;
+      mealsState = ViewData(updatedMeals);
+      summaryState = ViewData(
+        _buildConsumedSummary(updatedMeals, updatedPlan.summary),
+      );
+      return true;
+    } catch (error) {
+      replacementErrorMessage = error.toString();
+      return false;
+    } finally {
+      replacingMealId = null;
+      notifyListeners();
     }
   }
 

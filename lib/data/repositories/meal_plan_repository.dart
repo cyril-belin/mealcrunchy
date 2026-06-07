@@ -57,6 +57,58 @@ class MealPlanRepository {
     );
   }
 
+  Future<MealPlan> replaceMeal(String mealId) async {
+    final localDataStore = this.localDataStore;
+    if (localDataStore == null) {
+      throw const MealPlanUnavailableException(
+        'Stockage local indisponible pour remplacer ce repas.',
+      );
+    }
+
+    final localPlan = await _loadLocalMealPlan();
+    if (localPlan == null) {
+      throw const MealPlanUnavailableException(
+        'Aucun plan IA actif. Generez un plan pour continuer.',
+      );
+    }
+
+    final profile = await localDataStore.loadUserProfile();
+    if (profile == null) {
+      throw const MealPlanReplacementException(
+        'Profil nutritionnel indisponible pour remplacer ce repas.',
+      );
+    }
+
+    final currentMeal = _findMeal(localPlan, mealId);
+    if (currentMeal == null) {
+      throw const MealPlanReplacementException(
+        'Repas introuvable dans le plan actif.',
+      );
+    }
+
+    final service = aiProxyService ?? AiProxyService();
+    final payload = await service.replaceMeal(
+      profile: profile,
+      currentMeal: currentMeal,
+      planContext: {
+        'plan': localPlan.toJson(),
+        'currentDay': localPlan.dayFor(_now()).toJson(),
+      },
+    );
+    final replacement = Meal.fromJson(_asJsonMap(payload['meal']));
+
+    if (replacement.id != currentMeal.id ||
+        replacement.type != currentMeal.type) {
+      throw const MealPlanReplacementException(
+        'Alternative IA invalide pour ce repas.',
+      );
+    }
+
+    final updatedPlan = localPlan.replaceMeal(replacement);
+    await localDataStore.saveActiveMealPlan(updatedPlan);
+    return updatedPlan;
+  }
+
   Future<Set<String>> getConsumedMealIds(String dayKey) async {
     final localDataStore = this.localDataStore;
     if (localDataStore != null) {
@@ -89,6 +141,18 @@ class MealPlanRepository {
     }
   }
 
+  Meal? _findMeal(MealPlan plan, String mealId) {
+    for (final day in plan.days) {
+      for (final meal in day.meals) {
+        if (meal.id == mealId) {
+          return meal;
+        }
+      }
+    }
+
+    return null;
+  }
+
   Map<String, Object?> _asJsonMap(Object? value) {
     if (value is Map<String, Object?>) {
       return value;
@@ -103,6 +167,15 @@ class MealPlanRepository {
       message: 'Reponse IA invalide.',
     );
   }
+}
+
+class MealPlanReplacementException implements Exception {
+  const MealPlanReplacementException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 class MealPlanUnavailableException implements Exception {

@@ -65,21 +65,21 @@ flutter analyze
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
-
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-07 | `flutter analyze` | 2 lints dans le faux repository de test : parametre `store` inutilise et initialisation de champ perfectible | Helper de test trop generique pour les nouveaux tests ViewModel | Constructeur simplifie et initialisation directe du completer | `flutter analyze` relance avec succes |
+| 2026-06-07 | MCP Flutter `widget_inspector get_widget_tree` | DTD non connecte | Aucune application Flutter active connectee au Dart Tooling Daemon | Absence documentee ; validation realisee par tests widget, MCP Dart, `flutter test` et `flutter analyze` | `flutter test`, `flutter analyze`, MCP Dart OK |
 
 ## Checklist de fin
 
-- [ ] Un repas peut etre remplace sans changer le reste du plan.
-- [ ] Le plan modifie est sauvegarde.
-- [ ] Les erreurs de remplacement sont affichees.
-- [ ] Les tests repository et ViewModel passent.
-- [ ] Les tests widget passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] Un repas peut etre remplace sans changer le reste du plan.
+- [x] Le plan modifie est sauvegarde.
+- [x] Les erreurs de remplacement sont affichees.
+- [x] Les tests repository et ViewModel passent.
+- [x] Les tests widget passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
 
 ## Mise a jour obligatoire du fichier global
 

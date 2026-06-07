@@ -41,6 +41,11 @@ class DailyMealPlanScreen extends StatelessWidget {
           dayLabel: viewModel.currentDayLabel,
           isMealConsumed: viewModel.isMealConsumed,
           onMealConsumedChanged: viewModel.setMealConsumed,
+          replacingMealId: viewModel.replacingMealId,
+          onReplaceMeal: (mealId) async {
+            final success = await viewModel.replaceMeal(mealId);
+            return success ? null : viewModel.replacementErrorMessage;
+          },
         ),
     };
   }
@@ -53,6 +58,8 @@ class _MealPlanContent extends StatelessWidget {
     required this.dayLabel,
     required this.isMealConsumed,
     required this.onMealConsumedChanged,
+    required this.replacingMealId,
+    required this.onReplaceMeal,
   });
 
   final List<Meal> meals;
@@ -61,6 +68,8 @@ class _MealPlanContent extends StatelessWidget {
   final bool Function(String mealId) isMealConsumed;
   final Future<bool> Function(String mealId, {required bool consumed})
   onMealConsumedChanged;
+  final String? replacingMealId;
+  final Future<String?> Function(String mealId) onReplaceMeal;
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +176,7 @@ class _MealPlanContent extends StatelessWidget {
               child: _MealCard(
                 meal: meal,
                 consumed: isMealConsumed(meal.id),
+                isReplacing: replacingMealId == meal.id,
                 onConsumedChanged: (consumed) async {
                   final messenger = ScaffoldMessenger.of(context);
                   final success = await onMealConsumedChanged(
@@ -184,6 +194,21 @@ class _MealPlanContent extends StatelessWidget {
                         ),
                       );
                   }
+                },
+                onReplaceMeal: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final errorMessage = await onReplaceMeal(meal.id);
+                  if (!context.mounted) {
+                    return;
+                  }
+
+                  messenger
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text(errorMessage ?? 'Repas remplacé.'),
+                      ),
+                    );
                 },
               ),
             ),
@@ -293,12 +318,16 @@ class _MealCard extends StatelessWidget {
   const _MealCard({
     required this.meal,
     required this.consumed,
+    required this.isReplacing,
     required this.onConsumedChanged,
+    required this.onReplaceMeal,
   });
 
   final Meal meal;
   final bool consumed;
+  final bool isReplacing;
   final ValueChanged<bool> onConsumedChanged;
+  final Future<void> Function() onReplaceMeal;
 
   @override
   Widget build(BuildContext context) {
@@ -357,6 +386,18 @@ class _MealCard extends StatelessWidget {
                   activeColor: AppColors.primary,
                   onChanged: (value) => onConsumedChanged(value ?? false),
                 ),
+                isReplacing
+                    ? const SizedBox.square(
+                        dimension: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : IconButton(
+                        key: ValueKey('meal-replace-button-${meal.id}'),
+                        tooltip: 'Remplacer',
+                        onPressed: onReplaceMeal,
+                        icon: const Icon(Icons.auto_awesome_rounded),
+                        color: AppColors.primary,
+                      ),
                 const Icon(
                   Icons.chevron_right_rounded,
                   color: AppColors.secondaryText,

@@ -33,15 +33,26 @@ class MealDetailsScreen extends StatelessWidget {
       ),
       ViewData<List<Meal>>() => _MealDetailsContent(
         meal: viewModel.mealById(mealId),
+        isReplacing: viewModel.replacingMealId == mealId,
+        onReplaceMeal: () async {
+          final success = await viewModel.replaceMeal(mealId);
+          return success ? null : viewModel.replacementErrorMessage;
+        },
       ),
     };
   }
 }
 
 class _MealDetailsContent extends StatelessWidget {
-  const _MealDetailsContent({required this.meal});
+  const _MealDetailsContent({
+    required this.meal,
+    required this.isReplacing,
+    required this.onReplaceMeal,
+  });
 
   final Meal? meal;
+  final bool isReplacing;
+  final Future<String?> Function() onReplaceMeal;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +186,35 @@ class _MealDetailsContent extends StatelessWidget {
                 _IngredientList(meal: meal),
                 const SizedBox(height: 26),
                 _Instructions(meal: meal),
+                const SizedBox(height: 26),
+                ElevatedButton.icon(
+                  onPressed: isReplacing
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final errorMessage = await onReplaceMeal();
+                          if (!context.mounted) {
+                            return;
+                          }
+
+                          messenger
+                            ..hideCurrentSnackBar()
+                            ..showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  errorMessage ?? 'Repas remplacé.',
+                                ),
+                              ),
+                            );
+                        },
+                  icon: isReplacing
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.auto_awesome_rounded),
+                  label: Text(isReplacing ? 'Remplacement...' : 'Remplacer'),
+                ),
               ],
             ),
           ),
