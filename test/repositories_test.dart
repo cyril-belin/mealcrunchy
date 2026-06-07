@@ -145,7 +145,7 @@ void main() {
           isA<MealPlanUnavailableException>().having(
             (error) => error.message,
             'message',
-            'Aucun plan IA actif. Generez un plan pour continuer.',
+            'Aucun plan IA actif. Générez un plan pour continuer.',
           ),
         ),
       );
@@ -161,7 +161,7 @@ void main() {
       final preferences = await repository.getPreferences();
 
       expect(preferences, isNotEmpty);
-      expect(preferences.first.title, 'Objectifs sante');
+      expect(preferences.first.title, 'Objectifs santé');
     });
 
     test('maps a locally saved profile to preference items', () async {
@@ -172,7 +172,7 @@ void main() {
 
       final preferences = await repository.getPreferences();
 
-      expect(preferences.first.title, 'Objectifs sante');
+      expect(preferences.first.title, 'Objectifs santé');
       expect(preferences.first.value, 'Perdre du poids');
       expect(preferences[2].value, 'Cacahuetes - Olives');
     });

@@ -11,6 +11,7 @@ class AuthViewModel extends ChangeNotifier {
     required AuthRepository authRepository,
     required LocalDataStore localDataStore,
   }) : _authRepository = authRepository,
+       // ignore: prefer_initializing_formals
        _localDataStore = localDataStore,
        authState = ViewData(authRepository.currentAccount) {
     _subscription = _authRepository.authStateChanges().listen(_handleAuthState);
@@ -130,4 +131,3 @@ class AuthViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
-

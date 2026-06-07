@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/auth_repository.dart';
+import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
@@ -13,6 +14,7 @@ import 'package:mealcrunchy/ui/core/routing/app_router.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
 import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
+import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
 import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -60,8 +62,9 @@ void main() {
     'redirects authenticated users without meal plan from splash to onboarding',
     (tester) async {
       final authViewModel = AuthViewModel(
-        authRepository:
-            AuthRepository(service: _AuthService(account: _account)),
+        authRepository: AuthRepository(
+          service: _AuthService(account: _account),
+        ),
         localDataStore: _FakeLocalDataStore(hasMealPlan: false),
       );
       final router = createAppRouter(authViewModel: authViewModel);
@@ -80,8 +83,9 @@ void main() {
     'redirects authenticated users with meal plan from splash to meal plan',
     (tester) async {
       final authViewModel = AuthViewModel(
-        authRepository:
-            AuthRepository(service: _AuthService(account: _account)),
+        authRepository: AuthRepository(
+          service: _AuthService(account: _account),
+        ),
         localDataStore: _FakeLocalDataStore(hasMealPlan: true),
       );
       final router = createAppRouter(authViewModel: authViewModel);
@@ -100,8 +104,9 @@ void main() {
     'redirects authenticated users without meal plan from auth to onboarding',
     (tester) async {
       final authViewModel = AuthViewModel(
-        authRepository:
-            AuthRepository(service: _AuthService(account: _account)),
+        authRepository: AuthRepository(
+          service: _AuthService(account: _account),
+        ),
         localDataStore: _FakeLocalDataStore(hasMealPlan: false),
       );
       final router = createAppRouter(authViewModel: authViewModel);
@@ -129,6 +134,13 @@ class _RouterTestApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<AuthViewModel>.value(value: authViewModel),
         ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
+        ChangeNotifierProvider<MealPlanViewModel>(
+          create: (_) => MealPlanViewModel(
+            mealPlanRepository: MealPlanRepository(
+              localDataStore: _FakeLocalDataStore(hasMealPlan: true),
+            ),
+          ),
+        ),
       ],
       child: MaterialApp.router(
         title: 'MealCrunchy',
@@ -234,6 +246,7 @@ MealPlan _stubMealPlan() {
             'protein': 30,
             'carbs': 50,
             'fat': 15,
+            'imagePrompt': 'repas test',
             'duration': '20 min',
             'ingredients': ['Ingredient 1'],
             'instructions': ['Etape 1'],

@@ -49,7 +49,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Renseignez vos mesures.'), findsOneWidget);
-    expect(find.text('Creation de votre menu ideal...'), findsNothing);
+    expect(find.text('Création de votre menu idéal...'), findsNothing);
   });
 
   testWidgets('records metrics and continues to generation after validation', (
@@ -87,7 +87,7 @@ void main() {
     await tester.tap(continueButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('Creation de votre menu ideal...'), findsOneWidget);
+    expect(find.text('Création de votre menu idéal...'), findsOneWidget);
   });
 }
 

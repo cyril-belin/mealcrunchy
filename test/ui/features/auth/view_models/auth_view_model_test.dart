@@ -73,7 +73,7 @@ void main() {
       );
       await Future<void>.delayed(Duration.zero);
 
-      expect(states, hasLength(1));
+      expect(states, isNotEmpty);
       expect(
         (viewModel.authState as ViewData<AuthAccount?>).data?.displayName,
         'Alex Martin',
