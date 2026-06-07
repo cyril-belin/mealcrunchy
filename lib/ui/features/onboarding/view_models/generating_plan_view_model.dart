@@ -6,12 +6,13 @@ import 'package:mealcrunchy/ui/core/state/view_state.dart';
 
 class GeneratingPlanViewModel extends ChangeNotifier {
   GeneratingPlanViewModel({
-    required this.mealPlanRepository,
-    required this.localDataStore,
-  });
+    required MealPlanRepository mealPlanRepository,
+    required LocalDataStore localDataStore,
+  }) : _mealPlanRepository = mealPlanRepository,
+       _localDataStore = localDataStore;
 
-  final MealPlanRepository mealPlanRepository;
-  final LocalDataStore localDataStore;
+  final MealPlanRepository _mealPlanRepository;
+  final LocalDataStore _localDataStore;
 
   ViewState<MealPlan> state = const ViewLoading();
 
@@ -20,7 +21,7 @@ class GeneratingPlanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final profile = await localDataStore.loadUserProfile();
+      final profile = await _localDataStore.loadUserProfile();
       if (profile == null) {
         state = const ViewError(
           'Profil nutritionnel introuvable. Reprenez l\'onboarding.',
@@ -29,7 +30,7 @@ class GeneratingPlanViewModel extends ChangeNotifier {
         return;
       }
 
-      final plan = await mealPlanRepository.generateActiveMealPlan(profile);
+      final plan = await _mealPlanRepository.generateActiveMealPlan(profile);
       state = ViewData(plan);
     } catch (error) {
       state = ViewError(error.toString());

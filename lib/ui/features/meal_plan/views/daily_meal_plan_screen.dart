@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
@@ -210,15 +212,10 @@ class _MealPlanContent extends StatelessWidget {
                     ],
                   ),
                 ),
-                SizedBox(
-                  width: 58,
-                  height: 58,
-                  child: CircularProgressIndicator(
-                    value: summary.proteinPercent / 100,
-                    strokeWidth: 8,
-                    color: AppColors.primary,
-                    backgroundColor: AppColors.accent.withValues(alpha: 0.25),
-                  ),
+                _MacroRing(
+                  proteinPercent: summary.proteinPercent,
+                  carbsPercent: summary.carbsPercent,
+                  fatPercent: summary.fatPercent,
                 ),
               ],
             ),
@@ -367,5 +364,98 @@ class _MealCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _MacroRing extends StatelessWidget {
+  const _MacroRing({
+    required this.proteinPercent,
+    required this.carbsPercent,
+    required this.fatPercent,
+  });
+
+  final int proteinPercent;
+  final int carbsPercent;
+  final int fatPercent;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 58,
+      height: 58,
+      child: CustomPaint(
+        painter: _MacroRingPainter(
+          proteinPercent: proteinPercent,
+          carbsPercent: carbsPercent,
+          fatPercent: fatPercent,
+        ),
+      ),
+    );
+  }
+}
+
+class _MacroRingPainter extends CustomPainter {
+  _MacroRingPainter({
+    required this.proteinPercent,
+    required this.carbsPercent,
+    required this.fatPercent,
+  });
+
+  final int proteinPercent;
+  final int carbsPercent;
+  final int fatPercent;
+
+  static const double _strokeWidth = 8;
+  static const double _gapRadians = 0.12;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.shortestSide - _strokeWidth) / 2;
+    final rect = Rect.fromCircle(center: center, radius: radius);
+
+    final total = proteinPercent + carbsPercent + fatPercent;
+    final backgroundPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = _strokeWidth
+      ..color = AppColors.surfaceVariant;
+    canvas.drawCircle(center, radius, backgroundPaint);
+
+    if (total <= 0) {
+      return;
+    }
+
+    final segments = <(int, Color)>[
+      (proteinPercent, AppColors.primary),
+      (carbsPercent, AppColors.secondary),
+      (fatPercent, AppColors.accent),
+    ];
+
+    var startAngle = -math.pi / 2; // Start at the top.
+    for (final (value, color) in segments) {
+      if (value <= 0) {
+        continue;
+      }
+
+      final sweep = (value / total) * 2 * math.pi - _gapRadians;
+      if (sweep <= 0) {
+        continue;
+      }
+
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = _strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..color = color;
+      canvas.drawArc(rect, startAngle, sweep, false, paint);
+      startAngle += sweep + _gapRadians;
+    }
+  }
+
+  @override
+  bool shouldRepaint(_MacroRingPainter oldDelegate) {
+    return oldDelegate.proteinPercent != proteinPercent ||
+        oldDelegate.carbsPercent != carbsPercent ||
+        oldDelegate.fatPercent != fatPercent;
   }
 }
