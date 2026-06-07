@@ -27,21 +27,21 @@ class OnboardingActivityScreen extends StatelessWidget {
               const Expanded(child: ProgressPill(progress: 0.62)),
               const SizedBox(width: 12),
               Text(
-                'Etape 5 sur 8',
+                'Étape 5 sur 8',
                 style: Theme.of(context).textTheme.labelMedium,
               ),
             ],
           ),
           const SizedBox(height: 26),
           Text(
-            'Quel est votre niveau d\'activite ?',
+            'Quel est votre niveau d\'activité ?',
             style: Theme.of(
               context,
             ).textTheme.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
-            'Cela nous aide a calculer precisement vos besoins caloriques quotidiens.',
+            'Cela nous aide à calculer précisément vos besoins caloriques quotidiens.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.secondaryText),
@@ -64,12 +64,12 @@ class OnboardingActivityScreen extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Horaires de repas preferes',
+            'Horaires de repas préférés',
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
           Text(
-            'Quand aimez-vous manger habituellement ? Selectionnez tout ce qui convient.',
+            'Quand aimez-vous manger habituellement ? Sélectionnez tout ce qui convient.',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: AppColors.secondaryText),
@@ -90,7 +90,7 @@ class OnboardingActivityScreen extends StatelessWidget {
           const SizedBox(height: 26),
           ElevatedButton(
             onPressed: () => context.go(AppRoutes.onboardingMetrics),
-            child: const Text('Continuer vers les preferences'),
+            child: const Text('Continuer vers les préférences'),
           ),
           TextButton(
             onPressed: () => context.go(AppRoutes.mealPlan),

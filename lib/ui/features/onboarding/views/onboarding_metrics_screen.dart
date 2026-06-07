@@ -41,7 +41,7 @@ class OnboardingMetricsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Cela aide l\'IA a calculer vos besoins caloriques precis.',
+            'Cela aide l\'IA à calculer vos besoins caloriques précis.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.secondaryText),
@@ -105,7 +105,7 @@ class OnboardingMetricsScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Nous utilisons l\'equation de Mifflin-St Jeor pour estimer votre metabolisme de base.',
+                    'Nous utilisons l\'équation de Mifflin-St Jeor pour estimer votre métabolisme de base.',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),

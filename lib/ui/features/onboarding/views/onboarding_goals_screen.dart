@@ -18,7 +18,7 @@ class OnboardingGoalsScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const _OnboardingTopBar(stepLabel: 'Etape 2 sur 10', progress: 0.2),
+          const _OnboardingTopBar(stepLabel: 'Étape 2 sur 10', progress: 0.2),
           const SizedBox(height: 28),
           Text(
             'Quel est votre objectif ?',
@@ -28,7 +28,7 @@ class OnboardingGoalsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Selectionnez l\'objectif sante principal que vous voulez atteindre avec MealCrunchy.',
+            'Sélectionnez l\'objectif santé principal que vous voulez atteindre avec MealCrunchy.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: AppColors.secondaryText),

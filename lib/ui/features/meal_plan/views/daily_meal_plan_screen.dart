@@ -153,7 +153,7 @@ class _MealPlanContent extends StatelessWidget {
                 ),
               ),
               Text(
-                'Optimise par IA',
+                'Optimisé par IA',
                 style: Theme.of(
                   context,
                 ).textTheme.labelMedium?.copyWith(color: AppColors.success),
@@ -202,7 +202,7 @@ class _MealPlanContent extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Proteines ${summary.proteinPercent}%  -  Glucides ${summary.carbsPercent}%  -  Lipides ${summary.fatPercent}%',
+                        'Protéines ${summary.proteinPercent}%  -  Glucides ${summary.carbsPercent}%  -  Lipides ${summary.fatPercent}%',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.secondaryText,
                         ),
@@ -227,7 +227,7 @@ class _MealPlanContent extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () => context.go(AppRoutes.generatingPlan),
             icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('Regenerer le plan IA'),
+            label: const Text('Régénérer le plan IA'),
           ),
         ],
       ),
@@ -272,7 +272,7 @@ class _ErrorScaffold extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => context.go(AppRoutes.generatingPlan),
               icon: const Icon(Icons.auto_awesome_rounded),
-              label: const Text('Generer un plan'),
+              label: const Text('Générer un plan'),
             ),
             const SizedBox(height: 8),
             TextButton.icon(
@@ -280,7 +280,7 @@ class _ErrorScaffold extends StatelessWidget {
                 onRetry();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reessayer'),
+              label: const Text('Réessayer'),
             ),
           ],
         ),

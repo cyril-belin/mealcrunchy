@@ -42,7 +42,7 @@ class MealPlanRepository {
     }
 
     throw const MealPlanUnavailableException(
-      'Aucun plan IA actif. Generez un plan pour continuer.',
+      'Aucun plan IA actif. Générez un plan pour continuer.',
     );
   }
 
@@ -53,7 +53,7 @@ class MealPlanRepository {
     }
 
     throw const MealPlanUnavailableException(
-      'Aucun plan IA actif. Generez un plan pour continuer.',
+      'Aucun plan IA actif. Générez un plan pour continuer.',
     );
   }
 
@@ -100,7 +100,7 @@ class MealPlanRepository {
 
     throw const AiProxyException(
       code: 'invalid-response',
-      message: 'Reponse IA invalide.',
+      message: 'Réponse IA invalide.',
     );
   }
 }
