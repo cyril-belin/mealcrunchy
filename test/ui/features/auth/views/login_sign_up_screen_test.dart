@@ -4,7 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/auth_repository.dart';
 import 'package:mealcrunchy/data/services/auth_service.dart';
+import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
+import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
+import 'package:mealcrunchy/domain/models/user_profile.dart';
 import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
 import 'package:mealcrunchy/ui/features/auth/views/login_sign_up_screen.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +19,7 @@ void main() {
       _AuthTestApp(
         viewModel: AuthViewModel(
           authRepository: AuthRepository(service: _SuccessfulAuthService()),
+          localDataStore: _FakeLocalDataStore(),
         ),
       ),
     );
@@ -38,6 +43,7 @@ void main() {
       _AuthTestApp(
         viewModel: AuthViewModel(
           authRepository: AuthRepository(service: _SuccessfulAuthService()),
+          localDataStore: _FakeLocalDataStore(),
         ),
       ),
     );
@@ -66,6 +72,7 @@ void main() {
       _AuthTestApp(
         viewModel: AuthViewModel(
           authRepository: AuthRepository(service: _SuccessfulAuthService()),
+          localDataStore: _FakeLocalDataStore(),
         ),
       ),
     );
@@ -94,6 +101,7 @@ void main() {
       _AuthTestApp(
         viewModel: AuthViewModel(
           authRepository: AuthRepository(service: _SuccessfulAuthService()),
+          localDataStore: _FakeLocalDataStore(),
         ),
       ),
     );
@@ -127,6 +135,7 @@ void main() {
       _AuthTestApp(
         viewModel: AuthViewModel(
           authRepository: AuthRepository(service: service),
+          localDataStore: _FakeLocalDataStore(),
         ),
       ),
     );
@@ -160,6 +169,7 @@ void main() {
               const AuthServiceException(code: 'user-not-found'),
             ),
           ),
+          localDataStore: _FakeLocalDataStore(),
         ),
       ),
     );
@@ -245,6 +255,32 @@ class _CompleterAuthService extends _SuccessfulAuthService {
   void complete(AuthAccount account) {
     _completer?.complete(account);
   }
+}
+
+class _FakeLocalDataStore implements LocalDataStore {
+  @override
+  Future<MealPlan?> loadActiveMealPlan() async => null;
+
+  @override
+  Future<void> saveActiveMealPlan(MealPlan plan) async {}
+
+  @override
+  Future<UserProfile?> loadUserProfile() async => null;
+
+  @override
+  Future<void> saveUserProfile(UserProfile profile) async {}
+
+  @override
+  Future<Set<String>> loadConsumedMealIds(String dayKey) async => {};
+
+  @override
+  Future<void> saveConsumedMealIds(String dayKey, Set<String> ids) async {}
+
+  @override
+  Future<List<ShoppingListItem>> loadShoppingList() async => [];
+
+  @override
+  Future<void> saveShoppingList(List<ShoppingListItem> items) async {}
 }
 
 class _ThrowingAuthService implements AuthService {

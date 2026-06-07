@@ -109,7 +109,7 @@ class _ProfileContent extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Preferences personnelles',
+                  'Préférences personnelles',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
@@ -129,7 +129,7 @@ class _ProfileContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Parametres du compte',
+            'Paramètres du compte',
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 10),
@@ -138,26 +138,26 @@ class _ProfileContent extends StatelessWidget {
             title: 'Notifications',
             subtitle: 'Rappels de repas et rapports hebdomadaires',
             message:
-                'Les parametres de notification ne sont pas encore connectes.',
+                'Les paramètres de notification ne sont pas encore connectés.',
           ),
           const _SettingsRow(
             icon: Icons.lock_rounded,
-            title: 'Confidentialite et securite',
-            subtitle: 'Gerer vos donnees et votre compte',
+            title: 'Confidentialité et sécurité',
+            subtitle: 'Gérer vos données et votre compte',
             message:
-                'Les parametres de confidentialite ne sont pas encore connectes.',
+                'Les paramètres de confidentialité ne sont pas encore connectés.',
           ),
           const _SettingsRow(
             icon: Icons.help_outline_rounded,
             title: 'Centre d\'aide',
             subtitle: 'FAQ et support',
-            message: 'Le centre d\'aide n\'est pas encore connecte.',
+            message: 'Le centre d\'aide n\'est pas encore connecté.',
           ),
           const SizedBox(height: 18),
           OutlinedButton.icon(
             onPressed: () => context.go(AppRoutes.auth),
             icon: const Icon(Icons.logout_rounded),
-            label: const Text('Se deconnecter'),
+            label: const Text('Se déconnecter'),
             style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),
           ),
         ],
@@ -205,7 +205,7 @@ class _ProfileErrorScaffold extends StatelessWidget {
                 onRetry();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reessayer'),
+              label: const Text('Réessayer'),
             ),
           ],
         ),

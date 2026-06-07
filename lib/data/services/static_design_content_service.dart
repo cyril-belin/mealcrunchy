@@ -4,26 +4,26 @@ class StaticDesignContentService {
   Future<List<Map<String, Object?>>> fetchPreferenceItems() async {
     return const [
       {
-        'title': 'Objectifs sante',
+        'title': 'Objectifs santé',
         'value': 'Perte de poids - Prise de muscle',
         'iconName': 'target',
         'colorToken': 'info',
       },
       {
-        'title': 'Regime alimentaire',
-        'value': 'Mediterraneen - Riche en proteines',
+        'title': 'Régime alimentaire',
+        'value': 'Méditerranéen - Riche en protéines',
         'iconName': 'restaurant',
         'colorToken': 'success',
       },
       {
         'title': 'Allergies et aversions',
-        'value': 'Cacahuetes - Fruits de mer - Olives',
+        'value': 'Cacahuètes - Fruits de mer - Olives',
         'iconName': 'warning',
         'colorToken': 'error',
       },
       {
-        'title': 'Niveau d\'activite',
-        'value': 'Moderement actif (3-5 jours/semaine)',
+        'title': 'Niveau d\'activité',
+        'value': 'Modérément actif (3-5 jours/semaine)',
         'iconName': 'fitness',
         'colorToken': 'warning',
       },

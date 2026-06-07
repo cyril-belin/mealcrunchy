@@ -75,7 +75,7 @@ class AiProxyService {
       if (json == null || json[requiredKey] is! Map) {
         throw const AiProxyException(
           code: 'invalid-response',
-          message: 'Reponse IA invalide.',
+          message: 'Réponse IA invalide.',
         );
       }
       return json;
@@ -101,12 +101,12 @@ class AiProxyService {
 
   String _messageForCode(String code) {
     return switch (code) {
-      'unauthenticated' => 'Connectez-vous pour utiliser la generation IA.',
+      'unauthenticated' => 'Connectez-vous pour utiliser la génération IA.',
       'resource-exhausted' => 'Quota IA temporairement atteint.',
       'invalid-argument' => 'Demande IA invalide.',
       'unavailable' ||
-      'network-request-failed' => 'Generation IA momentanement indisponible.',
-      'internal' => 'Reponse IA invalide.',
+      'network-request-failed' => 'Génération IA momentanément indisponible.',
+      'internal' => 'Réponse IA invalide.',
       _ => 'Service IA indisponible pour le moment.',
     };
   }

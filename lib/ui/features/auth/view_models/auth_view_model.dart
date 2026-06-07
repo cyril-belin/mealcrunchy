@@ -2,22 +2,33 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:mealcrunchy/data/repositories/auth_repository.dart';
+import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 
 class AuthViewModel extends ChangeNotifier {
-  AuthViewModel({required AuthRepository authRepository})
-    : _authRepository = authRepository,
-      authState = ViewData(authRepository.currentAccount) {
+  AuthViewModel({
+    required AuthRepository authRepository,
+    required LocalDataStore localDataStore,
+  }) : _authRepository = authRepository,
+       _localDataStore = localDataStore,
+       authState = ViewData(authRepository.currentAccount) {
     _subscription = _authRepository.authStateChanges().listen(_handleAuthState);
+    if (authRepository.currentAccount != null) {
+      _checkActiveMealPlan();
+    }
   }
 
   final AuthRepository _authRepository;
+  final LocalDataStore _localDataStore;
   late final StreamSubscription<AuthAccount?> _subscription;
 
   ViewState<AuthAccount?> authState;
+  bool? _hasActiveMealPlan;
 
-  bool get isLoading => authState is ViewLoading<AuthAccount?>;
+  bool get isLoading =>
+      authState is ViewLoading<AuthAccount?> ||
+      (isAuthenticated && _hasActiveMealPlan == null);
 
   bool get isAuthenticated {
     return switch (authState) {
@@ -25,6 +36,8 @@ class AuthViewModel extends ChangeNotifier {
       _ => false,
     };
   }
+
+  bool get hasActiveMealPlan => _hasActiveMealPlan ?? false;
 
   String? get errorMessage {
     return switch (authState) {
@@ -55,6 +68,7 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<void> signOut() async {
     authState = const ViewLoading();
+    _hasActiveMealPlan = null;
     notifyListeners();
 
     try {
@@ -67,6 +81,12 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _checkActiveMealPlan() async {
+    final plan = await _localDataStore.loadActiveMealPlan();
+    _hasActiveMealPlan = plan != null;
+    notifyListeners();
+  }
+
   Future<void> _runAuthAction(Future<AuthAccount> Function() action) async {
     authState = const ViewLoading();
     notifyListeners();
@@ -74,6 +94,7 @@ class AuthViewModel extends ChangeNotifier {
     try {
       final account = await action();
       authState = ViewData(account);
+      await _checkActiveMealPlan();
     } on AuthRepositoryException catch (error) {
       authState = ViewError(error.message);
     } catch (_) {
@@ -94,6 +115,12 @@ class AuthViewModel extends ChangeNotifier {
       return;
     }
     authState = ViewData(account);
+    if (account != null) {
+      _hasActiveMealPlan = null;
+      _checkActiveMealPlan();
+    } else {
+      _hasActiveMealPlan = null;
+    }
     notifyListeners();
   }
 
@@ -103,3 +130,4 @@ class AuthViewModel extends ChangeNotifier {
     super.dispose();
   }
 }
+

@@ -30,7 +30,9 @@ GoRouter createAppRouter({
 
       if (isSplashRoute || isAuthRoute) {
         if (authViewModel.isAuthenticated) {
-          return AppRoutes.onboardingGoals;
+          return authViewModel.hasActiveMealPlan
+              ? AppRoutes.mealPlan
+              : AppRoutes.onboardingGoals;
         }
         return null;
       }

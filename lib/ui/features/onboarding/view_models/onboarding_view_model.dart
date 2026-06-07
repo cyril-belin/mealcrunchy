@@ -11,18 +11,18 @@ class OnboardingViewModel extends ChangeNotifier {
   final List<OnboardingOption> _goals = [
     const OnboardingOption(
       title: 'Perdre du poids',
-      subtitle: 'Bruler les graisses avec des plans caloriques maitrises',
+      subtitle: 'Brûler les graisses avec des plans caloriques maîtrisés',
       iconName: 'fitness',
       selected: true,
     ),
     const OnboardingOption(
       title: 'Manger plus sainement',
-      subtitle: 'Ameliorer votre nutrition et vos habitudes alimentaires',
+      subtitle: 'Améliorer votre nutrition et vos habitudes alimentaires',
       iconName: 'restaurant',
     ),
     const OnboardingOption(
       title: 'Prendre du muscle',
-      subtitle: 'Des repas riches en proteines pour la force et la masse',
+      subtitle: 'Des repas riches en protéines pour la force et la masse',
       iconName: 'bolt',
     ),
     const OnboardingOption(
@@ -40,7 +40,7 @@ class OnboardingViewModel extends ChangeNotifier {
       iconName: 'set_meal',
       selected: true,
     ),
-    const OnboardingOption(title: 'Vegetarien', subtitle: '', iconName: 'egg'),
+    const OnboardingOption(title: 'Végétarien', subtitle: '', iconName: 'egg'),
     const OnboardingOption(title: 'Paleo', subtitle: '', iconName: 'grain'),
     const OnboardingOption(
       title: 'Sans gluten',
@@ -48,7 +48,7 @@ class OnboardingViewModel extends ChangeNotifier {
       iconName: 'bakery',
     ),
     const OnboardingOption(
-      title: 'Mediterraneen',
+      title: 'Méditerranéen',
       subtitle: '',
       iconName: 'public',
     ),
@@ -62,23 +62,23 @@ class OnboardingViewModel extends ChangeNotifier {
       selected: true,
     ),
     const OnboardingOption(
-      title: 'Cacahuetes',
-      subtitle: 'Beurre de cacahuete, huiles',
+      title: 'Cacahuètes',
+      subtitle: 'Beurre de cacahuète, huiles',
       iconName: 'nutrition',
     ),
     const OnboardingOption(
       title: 'Gluten',
-      subtitle: 'Ble, seigle, orge',
+      subtitle: 'Blé, seigle, orge',
       iconName: 'grain',
     ),
     const OnboardingOption(
       title: 'Fruits de mer',
-      subtitle: 'Poisson et crustaces',
+      subtitle: 'Poisson et crustacés',
       iconName: 'set_meal',
     ),
     const OnboardingOption(
-      title: 'Oeufs',
-      subtitle: 'Oeufs entiers, mayonnaise',
+      title: 'Œufs',
+      subtitle: 'Œufs entiers, mayonnaise',
       iconName: 'egg',
     ),
     const OnboardingOption(
@@ -90,31 +90,31 @@ class OnboardingViewModel extends ChangeNotifier {
 
   final List<OnboardingOption> _activityLevels = [
     const OnboardingOption(
-      title: 'Sedentaire',
+      title: 'Sédentaire',
       subtitle: 'Peu ou pas d\'exercice, travail de bureau',
       iconName: 'desk',
     ),
     const OnboardingOption(
-      title: 'Legerement actif',
-      subtitle: 'Exercice leger 1 a 3 jours/semaine',
+      title: 'Légèrement actif',
+      subtitle: 'Exercice léger 1 à 3 jours/semaine',
       iconName: 'walk',
       selected: true,
     ),
     const OnboardingOption(
-      title: 'Moderement actif',
-      subtitle: 'Exercice modere 3 a 5 jours/semaine',
+      title: 'Modérément actif',
+      subtitle: 'Exercice modéré 3 à 5 jours/semaine',
       iconName: 'fitness',
     ),
     const OnboardingOption(
-      title: 'Tres actif',
-      subtitle: 'Exercice intense 6 a 7 jours/semaine',
+      title: 'Très actif',
+      subtitle: 'Exercice intense 6 à 7 jours/semaine',
       iconName: 'self_improvement',
     ),
   ];
 
   final List<OnboardingOption> _mealTiming = [
     const OnboardingOption(
-      title: 'Leve-tot',
+      title: 'Lève-tôt',
       subtitle: '',
       iconName: 'light_mode',
       selected: true,
@@ -125,7 +125,7 @@ class OnboardingViewModel extends ChangeNotifier {
       iconName: 'restaurant',
     ),
     const OnboardingOption(
-      title: 'Jeune intermittent',
+      title: 'Jeûne intermittent',
       subtitle: '',
       iconName: 'timer',
     ),

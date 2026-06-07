@@ -81,7 +81,7 @@ class _GeneratingPlanScreenState extends State<GeneratingPlanScreen>
           ),
           const SizedBox(height: 24),
           Text(
-            'Creation de votre menu ideal...',
+            'Création de votre menu idéal...',
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
@@ -89,7 +89,7 @@ class _GeneratingPlanScreenState extends State<GeneratingPlanScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Analyse de vos preferences et objectifs nutritionnels',
+            'Analyse de vos préférences et objectifs nutritionnels',
             textAlign: TextAlign.center,
             style: Theme.of(
               context,
@@ -104,10 +104,10 @@ class _GeneratingPlanScreenState extends State<GeneratingPlanScreen>
               final isError = state is ViewError<MealPlan>;
               final hint = switch (value) {
                 _ when isError => 'Interrompu',
-                >= 1.0 => 'Termine',
+                >= 1.0 => 'Terminé',
                 >= 0.85 => 'Presque fini',
                 >= 0.4 => 'En cours',
-                _ => 'Demarrage',
+                _ => 'Démarrage',
               };
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -118,7 +118,7 @@ class _GeneratingPlanScreenState extends State<GeneratingPlanScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '$percent % termine',
+                        '$percent % terminé',
                         style: Theme.of(context).textTheme.labelMedium,
                       ),
                       Text(
@@ -143,7 +143,7 @@ class _GeneratingPlanScreenState extends State<GeneratingPlanScreen>
                 context.read<GeneratingPlanViewModel>().generate();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Reessayer'),
+              label: const Text('Réessayer'),
             ),
         ],
       ),
@@ -159,11 +159,11 @@ class _GenerationStateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isError = state is ViewError<MealPlan>;
-    final title = isError ? 'Generation interrompue' : 'Personnalisation IA';
+    final title = isError ? 'Génération interrompue' : 'Personnalisation IA';
     final message = switch (state) {
       ViewError<MealPlan>(message: final message) => _cleanMessage(message),
       _ =>
-        'Nous equilibrons vos macros pour garder votre energie toute la journee.',
+        'Nous équilibrons vos macros pour garder votre énergie toute la journée.',
     };
 
     return SoftCard(
