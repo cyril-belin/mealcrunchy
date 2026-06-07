@@ -11,7 +11,7 @@ import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_m
 void main() {
   group('OnboardingViewModel', () {
     test('selects a single primary goal', () {
-      final viewModel = OnboardingViewModel();
+      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
 
       viewModel.selectGoal('Prendre du muscle');
 
@@ -20,13 +20,13 @@ void main() {
     });
 
     test('starts with no allergy pre-selected', () {
-      final viewModel = OnboardingViewModel();
+      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
 
       expect(viewModel.selectedAllergyTitles, isEmpty);
     });
 
     test('toggles allergies as a multi-selection', () {
-      final viewModel = OnboardingViewModel();
+      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
 
       viewModel.toggleAllergy('Cacahuètes');
       viewModel.toggleAllergy('Gluten');
@@ -43,7 +43,7 @@ void main() {
     });
 
     test('refuses to build a profile when required metrics are missing', () {
-      final viewModel = OnboardingViewModel();
+      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
 
       expect(viewModel.isProfileValid, isFalse);
       expect(viewModel.buildProfile(), isNull);
@@ -51,7 +51,7 @@ void main() {
     });
 
     test('builds a valid nutrition profile with selections and metrics', () {
-      final viewModel = OnboardingViewModel()
+      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore())
         ..selectGoal('Prendre du muscle')
         ..selectDietStyle('Méditerranéen')
         ..selectActivityLevel('Très actif')

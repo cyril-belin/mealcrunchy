@@ -78,7 +78,7 @@ void main() {
           isA<MealPlanUnavailableException>().having(
             (error) => error.message,
             'message',
-            'Aucun plan IA actif. Generez un plan pour continuer.',
+            'Aucun plan IA actif. Générez un plan pour continuer.',
           ),
         ),
       );

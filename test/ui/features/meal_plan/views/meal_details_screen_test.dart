@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
-import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
+import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
+import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
+import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
+import 'package:mealcrunchy/domain/models/user_profile.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
@@ -88,11 +92,52 @@ const _targetSummary = NutritionSummary(
 
 class _DetailsMealPlanRepository extends MealPlanRepository {
   _DetailsMealPlanRepository()
-    : super(trackingStore: MemoryDailyMealTrackingStore());
+    : super(
+        aiProxyService: _UnusedAiProxyService(),
+        localDataStore: _NoOpLocalDataStore(),
+      );
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_dinner];
 
   @override
   Future<NutritionSummary> getNutritionSummary() async => _targetSummary;
+}
+
+class _UnusedAiProxyService extends AiProxyService {
+  _UnusedAiProxyService() : super(client: _UnusedAiCallableClient());
+}
+
+class _UnusedAiCallableClient implements AiCallableClient {
+  @override
+  Future<Object?> call(String name, Map<String, Object?> data) {
+    throw UnimplementedError();
+  }
+}
+
+class _NoOpLocalDataStore implements LocalDataStore {
+  @override
+  Future<MealPlan?> loadActiveMealPlan() async => null;
+
+  @override
+  Future<Set<String>> loadConsumedMealIds(String dayKey) async => <String>{};
+
+  @override
+  Future<List<ShoppingListItem>> loadShoppingList() async =>
+      const <ShoppingListItem>[];
+
+  @override
+  Future<UserProfile?> loadUserProfile() async => null;
+
+  @override
+  Future<void> saveActiveMealPlan(MealPlan plan) async {}
+
+  @override
+  Future<void> saveConsumedMealIds(String dayKey, Set<String> ids) async {}
+
+  @override
+  Future<void> saveShoppingList(List<ShoppingListItem> items) async {}
+
+  @override
+  Future<void> saveUserProfile(UserProfile profile) async {}
 }

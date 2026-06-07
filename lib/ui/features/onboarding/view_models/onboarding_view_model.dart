@@ -7,9 +7,10 @@ import 'package:mealcrunchy/domain/models/onboarding_option.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 
 class OnboardingViewModel extends ChangeNotifier {
-  OnboardingViewModel({this.localDataStore});
+  OnboardingViewModel({required LocalDataStore localDataStore})
+      : _localDataStore = localDataStore;
 
-  final LocalDataStore? localDataStore;
+  final LocalDataStore _localDataStore;
 
   final List<OnboardingOption> _goals = [
     const OnboardingOption(
@@ -214,7 +215,7 @@ class OnboardingViewModel extends ChangeNotifier {
     _profileValidationRequested = true;
     final profile = buildProfile();
     if (profile != null) {
-      await localDataStore?.saveUserProfile(profile);
+      await _localDataStore.saveUserProfile(profile);
     }
     notifyListeners();
     return profile;

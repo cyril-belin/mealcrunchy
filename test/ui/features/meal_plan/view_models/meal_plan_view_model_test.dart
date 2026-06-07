@@ -1,10 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
-import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
+import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
+import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
+
+import '../../../../helpers/fake_local_data_store.dart';
 
 void main() {
   group('MealPlanViewModel daily tracking', () {
@@ -12,7 +15,9 @@ void main() {
       'mealById returns the matching meal and null for an unknown id',
       () async {
         final viewModel = MealPlanViewModel(
-          mealPlanRepository: _TrackingMealPlanRepository(),
+          mealPlanRepository: _TrackingMealPlanRepository(
+            localDataStore: FakeLocalDataStore(),
+          ),
         );
         await Future<void>.delayed(Duration.zero);
 
@@ -23,7 +28,9 @@ void main() {
 
     test('marking a meal consumed increases consumed calories', () async {
       final viewModel = MealPlanViewModel(
-        mealPlanRepository: _TrackingMealPlanRepository(),
+        mealPlanRepository: _TrackingMealPlanRepository(
+          localDataStore: FakeLocalDataStore(),
+        ),
       );
       await Future<void>.delayed(Duration.zero);
 
@@ -36,8 +43,10 @@ void main() {
     });
 
     test('unmarking a meal removes its calories from progress', () async {
+      final localDataStore = FakeLocalDataStore()
+        ..consumedMealIdsByDay['2026-06-06'] = {'breakfast', 'lunch'};
       final repository = _TrackingMealPlanRepository(
-        initiallyConsumedMealIds: {'breakfast', 'lunch'},
+        localDataStore: localDataStore,
       );
       final viewModel = MealPlanViewModel(
         mealPlanRepository: repository,
@@ -55,19 +64,20 @@ void main() {
     });
 
     test('reloads consumed meals from local tracking storage', () async {
-      final store = MemoryDailyMealTrackingStore(
-        initialConsumedMealIdsByDay: {
-          '2026-06-06': {'breakfast'},
-        },
-      );
+      final sharedLocalDataStore = FakeLocalDataStore()
+        ..consumedMealIdsByDay['2026-06-06'] = {'breakfast'};
       final firstViewModel = MealPlanViewModel(
-        mealPlanRepository: _TrackingMealPlanRepository(store: store),
+        mealPlanRepository: _TrackingMealPlanRepository(
+          localDataStore: sharedLocalDataStore,
+        ),
         now: () => DateTime(2026, 6, 6),
       );
       await Future<void>.delayed(Duration.zero);
 
       final secondViewModel = MealPlanViewModel(
-        mealPlanRepository: _TrackingMealPlanRepository(store: store),
+        mealPlanRepository: _TrackingMealPlanRepository(
+          localDataStore: sharedLocalDataStore,
+        ),
         now: () => DateTime(2026, 6, 6),
       );
       await Future<void>.delayed(Duration.zero);
@@ -119,22 +129,26 @@ const _targetSummary = NutritionSummary(
 );
 
 class _TrackingMealPlanRepository extends MealPlanRepository {
-  _TrackingMealPlanRepository({
-    DailyMealTrackingStore? store,
-    Set<String> initiallyConsumedMealIds = const {},
-  }) : super(
-         trackingStore:
-             store ??
-             MemoryDailyMealTrackingStore(
-               initialConsumedMealIdsByDay: {
-                 '2026-06-06': initiallyConsumedMealIds,
-               },
-             ),
-       );
+  _TrackingMealPlanRepository({required LocalDataStore localDataStore})
+    : super(
+        aiProxyService: _UnusedAiProxyService(),
+        localDataStore: localDataStore,
+      );
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_breakfast, _lunch];
 
   @override
   Future<NutritionSummary> getNutritionSummary() async => _targetSummary;
+}
+
+class _UnusedAiProxyService extends AiProxyService {
+  _UnusedAiProxyService() : super(client: _UnusedAiCallableClient());
+}
+
+class _UnusedAiCallableClient implements AiCallableClient {
+  @override
+  Future<Object?> call(String name, Map<String, Object?> data) {
+    throw UnimplementedError();
+  }
 }

@@ -1,5 +1,4 @@
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
-import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
@@ -8,29 +7,19 @@ import 'package:mealcrunchy/domain/models/user_profile.dart';
 
 class MealPlanRepository {
   MealPlanRepository({
-    this.aiProxyService,
-    this.localDataStore,
-    this.trackingStore = const SharedPreferencesDailyMealTrackingStore(),
+    required this.aiProxyService,
+    required this.localDataStore,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
-  final AiProxyService? aiProxyService;
-  final LocalDataStore? localDataStore;
-  final DailyMealTrackingStore trackingStore;
+  final AiProxyService aiProxyService;
+  final LocalDataStore localDataStore;
   final DateTime Function() _now;
 
   Future<MealPlan> generateActiveMealPlan(UserProfile profile) async {
-    final service = aiProxyService ?? AiProxyService();
-    final payload = await service.generateMealPlan(profile: profile);
+    final payload = await aiProxyService.generateMealPlan(profile: profile);
     final planJson = _asJsonMap(payload['plan']);
     final plan = MealPlan.fromAiJson(planJson, generatedAt: _now());
-    final localDataStore = this.localDataStore;
-    if (localDataStore == null) {
-      throw const MealPlanUnavailableException(
-        'Stockage local indisponible pour sauvegarder le plan IA.',
-      );
-    }
-
     await localDataStore.saveActiveMealPlan(plan);
     return plan;
   }
@@ -58,30 +47,14 @@ class MealPlanRepository {
   }
 
   Future<Set<String>> getConsumedMealIds(String dayKey) async {
-    final localDataStore = this.localDataStore;
-    if (localDataStore != null) {
-      return localDataStore.loadConsumedMealIds(dayKey);
-    }
-
-    return trackingStore.loadConsumedMealIds(dayKey);
+    return localDataStore.loadConsumedMealIds(dayKey);
   }
 
   Future<void> saveConsumedMealIds(String dayKey, Set<String> mealIds) async {
-    final localDataStore = this.localDataStore;
-    if (localDataStore != null) {
-      await localDataStore.saveConsumedMealIds(dayKey, mealIds);
-      return;
-    }
-
-    return trackingStore.saveConsumedMealIds(dayKey, mealIds);
+    await localDataStore.saveConsumedMealIds(dayKey, mealIds);
   }
 
   Future<MealPlan?> _loadLocalMealPlan() async {
-    final localDataStore = this.localDataStore;
-    if (localDataStore == null) {
-      return null;
-    }
-
     try {
       return localDataStore.loadActiveMealPlan();
     } catch (_) {

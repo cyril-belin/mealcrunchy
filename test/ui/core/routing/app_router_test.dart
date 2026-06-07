@@ -128,7 +128,9 @@ class _RouterTestApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider<AuthViewModel>.value(value: authViewModel),
-        ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
+        ChangeNotifierProvider(
+          create: (_) => OnboardingViewModel(localDataStore: _FakeLocalDataStore()),
+        ),
       ],
       child: MaterialApp.router(
         title: 'MealCrunchy',
