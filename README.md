@@ -8,7 +8,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Functions-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-Structured%20Outputs-412991?logo=openai&logoColor=white)](https://platform.openai.com)
-[![Tests](https://img.shields.io/badge/tests-84%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-105%20passing-brightgreen)]()
 
 </div>
 
@@ -40,8 +40,8 @@ MealCrunchy est une application Flutter multiplateforme qui accompagne l'utilisa
 | Proxy IA | Firebase Cloud Functions (TypeScript) avec OpenAI Structured Outputs, validation entree/sortie | Done |
 | Dashboard quotidien | Plan du jour, checkbox repas consommes, progression calories et macros en temps reel | Done |
 | Detail repas | Fiche complete : type, duree, calories, macros, ingredients, instructions | Done |
-| Generation plan IA | Plan repas 7 jours personnalise genere par le proxy OpenAI | In progress |
-| Remplacement repas | Remplacer un repas par une alternative IA respectant le profil | Planned |
+| Generation plan IA | Plan repas 7 jours personnalise genere par le proxy OpenAI | Done |
+| Remplacement repas | Remplacer un repas par une alternative IA respectant le profil | Done |
 | Liste de courses | Liste d'ingredients generee depuis le plan actif, avec cases a cocher | Planned |
 | Profil et preferences | Consultation et modification du profil nutritionnel apres onboarding | Planned |
 
@@ -78,7 +78,7 @@ MealCrunchy est une application Flutter multiplateforme qui accompagne l'utilisa
 | **Auth** | Firebase Authentication (email/password) |
 | **Persistance** | SharedPreferences (profil, plan actif, suivi quotidien) |
 | **Design** | Plus Jakarta Sans · Design system tokens (couleurs, typographie, composants) |
-| **Tests** | `flutter_test` (78 tests) · Node.js `node:test` (6 tests Functions) |
+| **Tests** | `flutter_test` (99 tests) · Node.js `node:test` (6 tests Functions) |
 | **CI/Qualite** | `flutter analyze` · lint strict · revue de code systematique |
 
 ## Demarrage rapide
@@ -110,7 +110,7 @@ flutter run
 ### Lancer les tests
 
 ```bash
-# Tests Flutter (78 tests)
+# Tests Flutter (99 tests)
 flutter test
 
 # Analyse statique
@@ -165,8 +165,8 @@ Le projet suit un workflow **design-first** et **feature-by-feature** :
 
 ## Roadmap
 
-- [ ] Generation du plan repas 7 jours via le proxy IA
-- [ ] Remplacement d'un repas individuel par une alternative IA
+- [x] Generation du plan repas 7 jours via le proxy IA
+- [x] Remplacement d'un repas individuel par une alternative IA
 - [ ] Liste de courses generee depuis le plan actif
 - [ ] Ecran profil et preferences modifiables
 - [ ] Gestion des quotas IA
