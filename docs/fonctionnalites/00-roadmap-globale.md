@@ -27,12 +27,12 @@ Chaque nouvelle fonctionnalite doit etre traitee dans une nouvelle fenetre ou un
 | Ordre | Fonctionnalite | Statut | Fichier de controle |
 |---:|---|---|---|
 | 1 | Authentification compte simple | Terminee | [authentification-compte-simple.md](authentification-compte-simple.md) |
-| 2 | Onboarding profil nutritionnel | A faire | [onboarding-profil-nutritionnel.md](onboarding-profil-nutritionnel.md) |
-| 3 | Stockage local des donnees | A faire | [stockage-local-donnees.md](stockage-local-donnees.md) |
-| 4 | Proxy Firebase OpenAI | A faire | [proxy-firebase-openai.md](proxy-firebase-openai.md) |
+| 2 | Onboarding profil nutritionnel | Terminee | [onboarding-profil-nutritionnel.md](onboarding-profil-nutritionnel.md) |
+| 3 | Stockage local des donnees | Terminee | [stockage-local-donnees.md](stockage-local-donnees.md) |
+| 4 | Proxy Firebase OpenAI | Terminee | [proxy-firebase-openai.md](proxy-firebase-openai.md) |
 | 5 | Generation plan IA 7 jours | A faire | [generation-plan-ia-7-jours.md](generation-plan-ia-7-jours.md) |
-| 6 | Dashboard suivi quotidien | A faire | [dashboard-suivi-quotidien.md](dashboard-suivi-quotidien.md) |
-| 7 | Detail repas | A faire | [detail-repas.md](detail-repas.md) |
+| 6 | Dashboard suivi quotidien | Terminee | [dashboard-suivi-quotidien.md](dashboard-suivi-quotidien.md) |
+| 7 | Detail repas | Terminee | [detail-repas.md](detail-repas.md) |
 | 8 | Remplacement repas | A faire | [remplacement-repas.md](remplacement-repas.md) |
 | 9 | Liste de courses | A faire | [liste-courses.md](liste-courses.md) |
 | 10 | Profil et preferences | A faire | [profil-preferences.md](profil-preferences.md) |
@@ -58,10 +58,10 @@ Pour chaque fonctionnalite :
 
 ## Derniere mise a jour
 
-- Date : 2026-06-04
-- Changement : corrections Firebase Auth appliquees et validees apres review `CORRECTIONS_AUTH_FIREBASE.md`.
+- Date : 2026-06-06
+- Changement : proxy Firebase OpenAI termine avec Functions v2 `generateMealPlan`/`replaceMeal`, secret `OPENAI_API_KEY`, Responses API Structured Outputs, service Flutter `AiProxyService`, tests Functions/service, `flutter test`, `flutter analyze` et MCP Dart valides.
 - Fonctionnalite active : aucune.
-- Prochaine fonctionnalite autorisee : Onboarding profil nutritionnel.
+- Prochaine fonctionnalite autorisee : Generation plan IA 7 jours.
 
 ## Erreurs importantes rencontrees
 
@@ -70,6 +70,12 @@ Pour chaque fonctionnalite :
 | 2026-06-04 | Authentification compte simple | `flutterfire configure` indisponible : `command not found` | FlutterFire CLI installe via `dart pub global activate flutterfire_cli`, puis configuration Firebase relancee. |
 | 2026-06-04 | Authentification compte simple | `flutter pub get` lance en parallele avec d'autres commandes Flutter a cause un crash SwiftPM `PathExistsException` | Relance de `flutter pub get` seul : commande validee. |
 | 2026-06-04 | Authentification compte simple | MCP Flutter / DTD non connecte pendant les corrections Firebase Auth | Validation finale realisee avec MCP Dart `analyze_files`, `flutter test` et `flutter analyze`. |
+| 2026-06-06 | Onboarding profil nutritionnel | `flutter test` global echouait avant implementation : `test/config/reste_a_faire_config_test.dart` cherchait l'ancien chemin Android `com/cyrilbelin/.../MainActivity.kt` | Reference de test corrigee vers `fr/cyrilbelin/.../MainActivity.kt`, puis `flutter test` relance avec succes. |
+| 2026-06-06 | Dashboard suivi quotidien | `flutter test` complet echouait apres ajout de `shared_preferences` car certains tests n'isolaient pas le stockage local | Tests ajustes avec `MemoryDailyMealTrackingStore` ou `SharedPreferences.setMockInitialValues`, puis suite complete relancee avec succes. |
+| 2026-06-06 | Detail repas | MCP Flutter / DTD non connecte pendant l'inspection widget live | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, MCP Dart `analyze_files`, `flutter test` et `flutter analyze`. |
+| 2026-06-06 | Stockage local des donnees | `SharedPreferencesAsyncPlatform instance must be set` dans les tests widget | `MealCrunchyApp` rend `LocalDataStore` injectable et les tests widget utilisent un faux store local. |
+| 2026-06-06 | Proxy Firebase OpenAI | `npm install` bloque par le reseau sandbox, puis avertissement Node local 24 vs runtime Functions Node 22 | Installation relancee avec permission reseau ; runtime Firebase conserve en `nodejs22`, tests Functions valides. |
+| 2026-06-06 | Proxy Firebase OpenAI | MCP Flutter / DTD non connecte pendant la verification | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests Functions, tests Flutter, MCP Dart `analyze_files`, `flutter test` et `flutter analyze`. |
 
 ## Historique de validation
 
@@ -78,3 +84,8 @@ Pour chaque fonctionnalite :
 | 2026-06-03 | Documentation de pilotage | Terminee | Creation initiale des fichiers de controle. |
 | 2026-06-04 | Authentification compte simple | Terminee | Projet Firebase `mealcrunchy-20260604`, apps Android/iOS/macOS/Web, provider Email/Password, tests et analyse valides. |
 | 2026-06-04 | Authentification compte simple | Terminee | Corrections Firebase Auth validees : routage splash/auth, erreurs Firebase non masquees, formulaire `Form`, accents, egalite `AuthAccount`, puis bundle ID passe a `com.cyrilbelin.mealcrunchy` via `RESTE_A_FAIRE.md`. |
+| 2026-06-06 | Onboarding profil nutritionnel | Terminee | Tests cibles onboarding, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
+| 2026-06-06 | Dashboard suivi quotidien | Terminee | Repas cochables, progression calories/macros calculee depuis les repas consommes, persistance locale par jour et tests dashboard valides. |
+| 2026-06-06 | Detail repas | Terminee | Detail en lecture seule, coherence dashboard/detail, etat repas introuvable, tests ViewModel/widget, `flutter test` et `flutter analyze` valides. |
+| 2026-06-06 | Stockage local des donnees | Terminee | Service `LocalDataStore` via `SharedPreferencesAsync`, serialisation profil/plan/suivi/courses data-layer, injection app/test, tests lecture/ecriture/JSON invalide, `flutter pub get`, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
+| 2026-06-06 | Proxy Firebase OpenAI | Terminee | Firebase Functions TypeScript v2 avec `generateMealPlan` et `replaceMeal`, validation entree/sortie, secret `OPENAI_API_KEY`, client OpenAI Responses Structured Outputs, service Flutter `AiProxyService`, tests Functions/service, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |

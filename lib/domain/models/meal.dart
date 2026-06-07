@@ -52,4 +52,20 @@ class Meal {
       instructions: readStringList(json, 'instructions'),
     );
   }
+
+  Map<String, Object?> toJson() {
+    return {
+      'id': id,
+      'type': type,
+      'name': name,
+      'calories': calories,
+      'protein': protein,
+      'carbs': carbs,
+      'fat': fat,
+      'imagePrompt': imagePrompt,
+      'duration': duration,
+      'ingredients': ingredients,
+      'instructions': instructions,
+    };
+  }
 }

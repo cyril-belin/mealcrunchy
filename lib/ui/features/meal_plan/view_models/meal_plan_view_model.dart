@@ -5,14 +5,40 @@ import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 
 class MealPlanViewModel extends ChangeNotifier {
-  MealPlanViewModel({required this.mealPlanRepository}) {
+  MealPlanViewModel({
+    required this.mealPlanRepository,
+    DateTime Function()? now,
+  }) : _now = now ?? DateTime.now {
     load();
   }
 
   final MealPlanRepository mealPlanRepository;
+  final DateTime Function() _now;
 
   ViewState<List<Meal>> mealsState = const ViewLoading();
   ViewState<NutritionSummary> summaryState = const ViewLoading();
+  Set<String> _consumedMealIds = <String>{};
+  NutritionSummary? _targetSummary;
+
+  String get currentDayLabel {
+    final currentDate = _now();
+    final monthName = switch (currentDate.month) {
+      1 => 'janv.',
+      2 => 'fev.',
+      3 => 'mars',
+      4 => 'avr.',
+      5 => 'mai',
+      6 => 'juin',
+      7 => 'juil.',
+      8 => 'aout',
+      9 => 'sept.',
+      10 => 'oct.',
+      11 => 'nov.',
+      12 => 'dec.',
+      _ => '',
+    };
+    return 'Aujourd\'hui, ${currentDate.day} $monthName';
+  }
 
   Future<void> load() async {
     mealsState = const ViewLoading();
@@ -21,9 +47,14 @@ class MealPlanViewModel extends ChangeNotifier {
 
     try {
       final meals = await mealPlanRepository.getDailyMeals();
-      final summary = await mealPlanRepository.getNutritionSummary();
+      final targetSummary = await mealPlanRepository.getNutritionSummary();
+      final consumedMealIds = await mealPlanRepository.getConsumedMealIds(
+        _dayKey,
+      );
+      _consumedMealIds = consumedMealIds;
+      _targetSummary = targetSummary;
       mealsState = ViewData(meals);
-      summaryState = ViewData(summary);
+      summaryState = ViewData(_buildConsumedSummary(meals, targetSummary));
     } catch (error) {
       final message = error.toString();
       mealsState = ViewError(message);
@@ -31,6 +62,40 @@ class MealPlanViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  bool isMealConsumed(String id) => _consumedMealIds.contains(id);
+
+  Future<bool> setMealConsumed(String id, {required bool consumed}) async {
+    final meals = switch (mealsState) {
+      ViewData<List<Meal>>(data: final data) => data,
+      _ => null,
+    };
+    final targetSummary = _targetSummary;
+
+    if (meals == null || targetSummary == null) {
+      return false;
+    }
+
+    final nextConsumedMealIds = _consumedMealIds.toSet();
+    if (consumed) {
+      nextConsumedMealIds.add(id);
+    } else {
+      nextConsumedMealIds.remove(id);
+    }
+
+    try {
+      await mealPlanRepository.saveConsumedMealIds(
+        _dayKey,
+        nextConsumedMealIds,
+      );
+      _consumedMealIds = nextConsumedMealIds;
+      summaryState = ViewData(_buildConsumedSummary(meals, targetSummary));
+      notifyListeners();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Meal? mealById(String id) {
@@ -48,5 +113,51 @@ class MealPlanViewModel extends ChangeNotifier {
     }
 
     return null;
+  }
+
+  String get _dayKey {
+    final currentDate = _now();
+    final month = currentDate.month.toString().padLeft(2, '0');
+    final day = currentDate.day.toString().padLeft(2, '0');
+    return '${currentDate.year}-$month-$day';
+  }
+
+  NutritionSummary _buildConsumedSummary(
+    List<Meal> meals,
+    NutritionSummary targetSummary,
+  ) {
+    final consumedMeals = meals.where(
+      (meal) => _consumedMealIds.contains(meal.id),
+    );
+    var consumedCalories = 0;
+    var consumedProtein = 0;
+    var consumedCarbs = 0;
+    var consumedFat = 0;
+
+    for (final meal in consumedMeals) {
+      consumedCalories += meal.calories;
+      consumedProtein += meal.protein;
+      consumedCarbs += meal.carbs;
+      consumedFat += meal.fat;
+    }
+
+    final totalMacros = consumedProtein + consumedCarbs + consumedFat;
+
+    return NutritionSummary(
+      consumedCalories: consumedCalories,
+      targetCalories: targetSummary.targetCalories,
+      progress: targetSummary.targetCalories == 0
+          ? 0
+          : (consumedCalories / targetSummary.targetCalories).clamp(0, 1),
+      proteinPercent: totalMacros == 0
+          ? 0
+          : (consumedProtein / totalMacros * 100).round(),
+      carbsPercent: totalMacros == 0
+          ? 0
+          : (consumedCarbs / totalMacros * 100).round(),
+      fatPercent: totalMacros == 0
+          ? 0
+          : (consumedFat / totalMacros * 100).round(),
+    );
   }
 }

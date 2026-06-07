@@ -27,4 +27,15 @@ class NutritionSummary {
       fatPercent: readJsonField<int>(json, 'fatPercent'),
     );
   }
+
+  Map<String, Object?> toJson() {
+    return {
+      'consumedCalories': consumedCalories,
+      'targetCalories': targetCalories,
+      'progress': progress,
+      'proteinPercent': proteinPercent,
+      'carbsPercent': carbsPercent,
+      'fatPercent': fatPercent,
+    };
+  }
 }

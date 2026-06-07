@@ -5,11 +5,20 @@ import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/ui/app.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'helpers/fake_local_data_store.dart';
 
 void main() {
+  setUp(() {
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+  });
+
   testWidgets('renders the routed MealCrunchy app', (tester) async {
     await tester.pumpWidget(
-      MealCrunchyApp(authRepository: _authRepository(account: null)),
+      MealCrunchyApp(
+        authRepository: _authRepository(account: null),
+        localDataStore: FakeLocalDataStore(),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -27,6 +36,7 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: _account),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.mealDetailsFor('avocado-toast'),
       ),
     );
@@ -50,6 +60,7 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: null),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.auth,
       ),
     );
@@ -69,6 +80,7 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: _account),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.onboardingGoals,
       ),
     );
@@ -96,29 +108,23 @@ void main() {
     );
   });
 
-  testWidgets('meal detail prototype actions give visible feedback', (
+  testWidgets('meal detail stays read-only without prototype session actions', (
     tester,
   ) async {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: _authRepository(account: _account),
+        localDataStore: FakeLocalDataStore(),
         initialLocation: AppRoutes.mealDetailsFor('avocado-toast'),
       ),
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.favorite_border_rounded));
-    await tester.pump();
-
-    expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
-
-    await tester.scrollUntilVisible(find.text('Marquer comme mange'), 400);
-    await tester.tap(find.text('Marquer comme mange'));
-    await tester.pump();
-
+    expect(find.byIcon(Icons.favorite_border_rounded), findsNothing);
+    expect(find.text('Marquer comme mange'), findsNothing);
     expect(
       find.text('Repas marque comme mange pour cette session.'),
-      findsOneWidget,
+      findsNothing,
     );
   });
 }

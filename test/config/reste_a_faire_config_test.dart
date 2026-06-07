@@ -8,7 +8,7 @@ void main() {
       final files = [
         'android/app/build.gradle.kts',
         'android/app/google-services.json',
-        'android/app/src/main/kotlin/com/cyrilbelin/mealcrunchy/MainActivity.kt',
+        'android/app/src/main/kotlin/fr/cyrilbelin/mealcrunchy/MainActivity.kt',
         'ios/Runner/GoogleService-Info.plist',
         'ios/Runner.xcodeproj/project.pbxproj',
         'linux/CMakeLists.txt',

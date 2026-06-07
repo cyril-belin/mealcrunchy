@@ -4,6 +4,7 @@ import 'package:mealcrunchy/data/repositories/auth_repository.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/repositories/preferences_repository.dart';
 import 'package:mealcrunchy/data/services/auth_service.dart';
+import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/ui/core/routing/app_router.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
@@ -18,10 +19,12 @@ class MealCrunchyApp extends StatelessWidget {
   const MealCrunchyApp({
     super.key,
     this.authRepository,
+    this.localDataStore,
     this.initialLocation = AppRoutes.splash,
   });
 
   final AuthRepository? authRepository;
+  final LocalDataStore? localDataStore;
   final String initialLocation;
 
   @override
@@ -37,14 +40,23 @@ class MealCrunchyApp extends StatelessWidget {
                 AuthRepository(service: authService);
           },
         ),
+        Provider<LocalDataStore>(
+          create: (_) => localDataStore ?? SharedPreferencesLocalDataStore(),
+        ),
         ProxyProvider<StaticDesignContentService, MealPlanRepository>(
-          update: (_, contentService, previous) {
-            return MealPlanRepository(contentService: contentService);
+          update: (context, contentService, _) {
+            return MealPlanRepository(
+              contentService: contentService,
+              localDataStore: context.read<LocalDataStore>(),
+            );
           },
         ),
         ProxyProvider<StaticDesignContentService, PreferencesRepository>(
-          update: (_, contentService, previous) {
-            return PreferencesRepository(contentService: contentService);
+          update: (context, contentService, _) {
+            return PreferencesRepository(
+              contentService: contentService,
+              localDataStore: context.read<LocalDataStore>(),
+            );
           },
         ),
         ChangeNotifierProxyProvider<AuthRepository, AuthViewModel>(
@@ -57,7 +69,13 @@ class MealCrunchyApp extends StatelessWidget {
             return previous ?? AuthViewModel(authRepository: repository);
           },
         ),
-        ChangeNotifierProvider(create: (_) => OnboardingViewModel()),
+        ChangeNotifierProvider(
+          create: (context) {
+            return OnboardingViewModel(
+              localDataStore: context.read<LocalDataStore>(),
+            );
+          },
+        ),
         ChangeNotifierProxyProvider<MealPlanRepository, MealPlanViewModel>(
           create: (context) {
             return MealPlanViewModel(

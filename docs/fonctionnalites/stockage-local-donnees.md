@@ -67,19 +67,30 @@ flutter analyze
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
+Le stockage local utilise `shared_preferences` deja present dans le projet, avec la nouvelle API `SharedPreferencesAsync` recommandee pour les nouveaux usages.
 
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-06 | MCP Flutter `widget_inspector get_widget_tree` | DTD non connecte | Aucune application Flutter active connectee au Dart Tooling Daemon | Absence documentee ; validation realisee par tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` | OK |
+| 2026-06-06 | `flutter test test/ui/features/onboarding/views/onboarding_flow_test.dart` | `SharedPreferencesAsyncPlatform instance must be set` | Les tests widgets configuraient l'ancienne API `SharedPreferences`, pas l'API async | `MealCrunchyApp` rend `LocalDataStore` injectable et les tests utilisent un faux store local | `flutter test test/ui/features/onboarding/views/onboarding_flow_test.dart` OK |
+| 2026-06-06 | `flutter analyze` | `prefer_initializing_formals` | Le store local du ViewModel etait initialise via un parametre intermediaire | Champ renomme en propriete immuable initialisee par `this.localDataStore` | `flutter analyze` OK |
 
 ## Checklist de fin
 
-- [ ] Les donnees principales sont sauvegardees localement.
-- [ ] Les donnees sont rechargees apres redemarrage de l'app.
-- [ ] Les tests couvrent lecture, ecriture et erreur.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] Les donnees principales sont sauvegardees localement.
+- [x] Les donnees sont rechargees apres redemarrage de l'app.
+- [x] Les tests couvrent lecture, ecriture et erreur.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
+
+## Validation finale
+
+- `flutter pub get` : OK.
+- `flutter test` : OK.
+- `flutter analyze` : OK.
+- MCP Dart `analyze_files` : OK, aucune erreur.
+- MCP Flutter / widget inspector : DTD non connecte, absence documentee ci-dessus.
 
 ## Mise a jour obligatoire du fichier global
 
