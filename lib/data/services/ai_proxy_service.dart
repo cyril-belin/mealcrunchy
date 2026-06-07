@@ -29,10 +29,9 @@ class FirebaseAiCallableClient implements AiCallableClient {
 }
 
 class AiProxyService {
-  AiProxyService({AiCallableClient? client})
-    : _client = client ?? FirebaseAiCallableClient();
+  AiProxyService({this.client});
 
-  final AiCallableClient _client;
+  final AiCallableClient? client;
 
   Future<Map<String, Object?>> generateMealPlan({
     required UserProfile profile,
@@ -70,7 +69,8 @@ class AiProxyService {
     required Map<String, Object?> data,
   }) async {
     try {
-      final payload = await _client.call(name, data);
+      final callableClient = client ?? FirebaseAiCallableClient();
+      final payload = await callableClient.call(name, data);
       final json = _asJsonMap(payload);
       if (json == null || json[requiredKey] is! Map) {
         throw const AiProxyException(

@@ -68,20 +68,27 @@ flutter analyze
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
-
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-07 | `flutter test` | `widget_test.dart` attendait le repas statique `Toast avocat et oeuf` | La generation IA supprime le fallback statique repas ; le test global n'injectait pas de plan IA local | Test mis a jour avec un `MealPlan` local de 7 jours | `flutter test` passe |
+| 2026-06-07 | MCP Flutter / DTD | Aucune app Flutter active connectee au DTD | Aucun `flutter run` actif pendant cette session | Absence documentee ; validation faite avec tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` | MCP Dart : `No errors` |
 
 ## Checklist de fin
 
-- [ ] Un plan 7 jours valide est genere.
-- [ ] Le plan est sauvegarde localement.
-- [ ] Les erreurs IA sont affichees proprement.
-- [ ] Les tests de modele, repository et ViewModel passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] Un plan 7 jours valide est genere.
+- [x] Le plan est sauvegarde localement.
+- [x] Les erreurs IA sont affichees proprement.
+- [x] Les tests de modele, repository et ViewModel passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
+
+## Validation finale
+
+- `flutter test` : 89 tests passent.
+- `flutter analyze` : aucune issue.
+- MCP Dart `analyze_files` : `No errors`.
+- MCP Flutter / DTD : DTD connecte, mais aucune app active disponible pour inspection live.
 
 ## Mise a jour obligatoire du fichier global
 

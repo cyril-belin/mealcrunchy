@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/daily_meal_tracking_store.dart';
-import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
@@ -89,10 +88,7 @@ const _targetSummary = NutritionSummary(
 
 class _DetailsMealPlanRepository extends MealPlanRepository {
   _DetailsMealPlanRepository()
-    : super(
-        contentService: const StaticDesignContentService(),
-        trackingStore: MemoryDailyMealTrackingStore(),
-      );
+    : super(trackingStore: MemoryDailyMealTrackingStore());
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_dinner];

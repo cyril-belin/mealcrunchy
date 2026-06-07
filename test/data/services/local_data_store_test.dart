@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
@@ -26,14 +27,13 @@ void main() {
     });
 
     test('saves and reloads the active meal plan', () async {
-      await store.saveActiveMealPlan(
-        meals: const [_breakfast],
-        summary: _summary,
-      );
+      await store.saveActiveMealPlan(_mealPlan);
 
       final reloaded = await store.loadActiveMealPlan();
 
-      expect(reloaded?.meals.single.id, 'breakfast');
+      expect(reloaded?.generatedAt, DateTime.utc(2026, 6, 7));
+      expect(reloaded?.days, hasLength(7));
+      expect(reloaded?.days.first.meals.single.id, 'breakfast');
       expect(reloaded?.summary.targetCalories, 2000);
     });
 
@@ -129,6 +129,19 @@ const _summary = NutritionSummary(
   proteinPercent: 30,
   carbsPercent: 45,
   fatPercent: 25,
+);
+
+final _mealPlan = MealPlan(
+  generatedAt: DateTime.utc(2026, 6, 7),
+  days: List.generate(
+    7,
+    (index) => MealPlanDay(
+      id: 'day-${index + 1}',
+      label: 'Jour ${index + 1}',
+      meals: const [_breakfast],
+    ),
+  ),
+  summary: _summary,
 );
 
 class _MemoryStringStore implements LocalStringStore {

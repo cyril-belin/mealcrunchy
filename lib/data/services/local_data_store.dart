@@ -1,7 +1,6 @@
 import 'dart:convert';
 
-import 'package:mealcrunchy/domain/models/meal.dart';
-import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
+import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -11,12 +10,9 @@ abstract class LocalDataStore {
 
   Future<void> saveUserProfile(UserProfile profile);
 
-  Future<LocalMealPlan?> loadActiveMealPlan();
+  Future<MealPlan?> loadActiveMealPlan();
 
-  Future<void> saveActiveMealPlan({
-    required List<Meal> meals,
-    required NutritionSummary summary,
-  });
+  Future<void> saveActiveMealPlan(MealPlan plan);
 
   Future<Set<String>> loadConsumedMealIds(String dayKey);
 
@@ -50,13 +46,6 @@ class SharedPreferencesStringStore implements LocalStringStore {
   }
 }
 
-class LocalMealPlan {
-  const LocalMealPlan({required this.meals, required this.summary});
-
-  final List<Meal> meals;
-  final NutritionSummary summary;
-}
-
 class SharedPreferencesLocalDataStore implements LocalDataStore {
   SharedPreferencesLocalDataStore({LocalStringStore? strings})
     : _strings = strings ?? SharedPreferencesStringStore();
@@ -82,31 +71,13 @@ class SharedPreferencesLocalDataStore implements LocalDataStore {
   }
 
   @override
-  Future<LocalMealPlan?> loadActiveMealPlan() {
-    return _readObject(activeMealPlanKey, (json) {
-      final meals = _readJsonList(json['meals'], Meal.fromJson);
-      final summaryJson = _asJsonMap(json['summary']);
-
-      if (meals == null || summaryJson == null) {
-        throw const FormatException('Invalid active meal plan payload.');
-      }
-
-      return LocalMealPlan(
-        meals: meals,
-        summary: NutritionSummary.fromJson(summaryJson),
-      );
-    });
+  Future<MealPlan?> loadActiveMealPlan() {
+    return _readObject(activeMealPlanKey, MealPlan.fromJson);
   }
 
   @override
-  Future<void> saveActiveMealPlan({
-    required List<Meal> meals,
-    required NutritionSummary summary,
-  }) {
-    return _writeJson(activeMealPlanKey, {
-      'meals': meals.map((meal) => meal.toJson()).toList(growable: false),
-      'summary': summary.toJson(),
-    });
+  Future<void> saveActiveMealPlan(MealPlan plan) {
+    return _writeJson(activeMealPlanKey, plan.toJson());
   }
 
   @override
