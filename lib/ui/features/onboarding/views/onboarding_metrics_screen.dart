@@ -52,6 +52,7 @@ class OnboardingMetricsScreen extends StatelessWidget {
             label: 'Age',
             hint: 'ex. 28',
             suffix: 'ans',
+            initialValue: viewModel.ageInput,
             onChanged: viewModel.updateAge,
           ),
           const SizedBox(height: 14),
@@ -60,6 +61,7 @@ class OnboardingMetricsScreen extends StatelessWidget {
             label: 'Taille',
             hint: 'ex. 175',
             suffix: 'cm',
+            initialValue: viewModel.heightCmInput,
             onChanged: viewModel.updateHeightCm,
           ),
           const SizedBox(height: 14),
@@ -71,6 +73,7 @@ class OnboardingMetricsScreen extends StatelessWidget {
                   label: 'Poids actuel',
                   hint: '75',
                   suffix: 'kg',
+                  initialValue: viewModel.currentWeightKgInput,
                   onChanged: viewModel.updateCurrentWeightKg,
                 ),
               ),
@@ -81,6 +84,7 @@ class OnboardingMetricsScreen extends StatelessWidget {
                   label: 'Poids cible',
                   hint: '70',
                   suffix: 'kg',
+                  initialValue: viewModel.targetWeightKgInput,
                   onChanged: viewModel.updateTargetWeightKg,
                 ),
               ),
@@ -122,6 +126,7 @@ class OnboardingMetricsScreen extends StatelessWidget {
           ElevatedButton(
             key: const ValueKey('onboarding-metrics-continue'),
             onPressed: () async {
+              final shouldReturnToProfile = viewModel.isEditingProfile;
               final profile = await viewModel.submitProfile();
               if (profile == null) {
                 return;
@@ -131,7 +136,11 @@ class OnboardingMetricsScreen extends StatelessWidget {
                 return;
               }
 
-              context.go(AppRoutes.generatingPlan);
+              context.go(
+                shouldReturnToProfile
+                    ? AppRoutes.profile
+                    : AppRoutes.generatingPlan,
+              );
             },
             child: const Text('Continuer'),
           ),
@@ -151,6 +160,7 @@ class _MetricField extends StatelessWidget {
     required this.label,
     required this.hint,
     required this.suffix,
+    required this.initialValue,
     required this.onChanged,
   });
 
@@ -158,12 +168,14 @@ class _MetricField extends StatelessWidget {
   final String label;
   final String hint;
   final String suffix;
+  final String initialValue;
   final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       key: fieldKey,
+      initialValue: initialValue,
       onChanged: onChanged,
       keyboardType: TextInputType.number,
       decoration: InputDecoration(

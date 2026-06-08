@@ -1,10 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
-import 'package:mealcrunchy/data/repositories/preferences_repository.dart';
 import 'package:mealcrunchy/data/repositories/shopping_list_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
-import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/domain/models/activity_level.dart';
 import 'package:mealcrunchy/domain/models/diet_style.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
@@ -30,6 +28,7 @@ void main() {
 
       expect(plan.days, hasLength(7));
       expect(localDataStore.activeMealPlan?.days, hasLength(7));
+      expect(localDataStore.profileNeedsPlanRegeneration, isFalse);
       expect(aiProxyService.requestedProfile, _profile);
     });
 
@@ -286,32 +285,6 @@ void main() {
       );
     });
   });
-
-  group('PreferencesRepository', () {
-    test('maps static preference payloads to typed preference items', () async {
-      final repository = PreferencesRepository(
-        contentService: const StaticDesignContentService(),
-      );
-
-      final preferences = await repository.getPreferences();
-
-      expect(preferences, isNotEmpty);
-      expect(preferences.first.title, 'Objectifs santé');
-    });
-
-    test('maps a locally saved profile to preference items', () async {
-      final repository = PreferencesRepository(
-        contentService: const StaticDesignContentService(),
-        localDataStore: _FakeLocalDataStore(userProfile: _profile),
-      );
-
-      final preferences = await repository.getPreferences();
-
-      expect(preferences.first.title, 'Objectifs santé');
-      expect(preferences.first.value, 'Perdre du poids');
-      expect(preferences[2].value, 'Cacahuetes - Olives');
-    });
-  });
 }
 
 const _profile = UserProfile(
@@ -435,12 +408,18 @@ class _FakeLocalDataStore implements LocalDataStore {
   MealPlan? activeMealPlan;
   List<ShoppingListItem> shoppingList = const <ShoppingListItem>[];
   final UserProfile? userProfile;
+  bool profileNeedsPlanRegeneration = true;
 
   @override
   Future<MealPlan?> loadActiveMealPlan() async => activeMealPlan;
 
   @override
   Future<UserProfile?> loadUserProfile() async => userProfile;
+
+  @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async {
+    return profileNeedsPlanRegeneration;
+  }
 
   @override
   Future<Set<String>> loadConsumedMealIds(String dayKey) async => <String>{};
@@ -465,4 +444,9 @@ class _FakeLocalDataStore implements LocalDataStore {
 
   @override
   Future<void> saveUserProfile(UserProfile profile) async {}
+
+  @override
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) async {
+    profileNeedsPlanRegeneration = value;
+  }
 }

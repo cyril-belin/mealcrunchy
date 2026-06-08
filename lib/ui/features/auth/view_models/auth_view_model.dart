@@ -38,6 +38,13 @@ class AuthViewModel extends ChangeNotifier {
     };
   }
 
+  AuthAccount? get account {
+    return switch (authState) {
+      ViewData(data: final account) => account,
+      _ => null,
+    };
+  }
+
   bool get hasActiveMealPlan => _hasActiveMealPlan ?? false;
 
   String? get errorMessage {

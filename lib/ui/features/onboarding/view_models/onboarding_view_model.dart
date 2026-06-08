@@ -150,6 +150,8 @@ class OnboardingViewModel extends ChangeNotifier {
   String _currentWeightKgInput = '';
   String _targetWeightKgInput = '';
   bool _profileValidationRequested = false;
+  bool _editingProfile = false;
+  UserProfile? _profileBeforeEdit;
 
   List<OnboardingOption> get goals => List.unmodifiable(_goals);
   List<OnboardingOption> get dietStyles => List.unmodifiable(_dietStyles);
@@ -162,6 +164,7 @@ class OnboardingViewModel extends ChangeNotifier {
   String get heightCmInput => _heightCmInput;
   String get currentWeightKgInput => _currentWeightKgInput;
   String get targetWeightKgInput => _targetWeightKgInput;
+  bool get isEditingProfile => _editingProfile;
 
   String get selectedGoalTitle => _selectedTitle(_goals);
   String get selectedDietStyleTitle => _selectedTitle(_dietStyles);
@@ -210,11 +213,33 @@ class OnboardingViewModel extends ChangeNotifier {
     apply: (nextValue) => _targetWeightKgInput = nextValue,
   );
 
+  Future<bool> startProfileEdit() async {
+    final profile = await _localDataStore.loadUserProfile();
+    if (profile == null) {
+      return false;
+    }
+
+    _editingProfile = true;
+    _profileBeforeEdit = profile;
+    _profileValidationRequested = false;
+    _applyProfile(profile);
+    notifyListeners();
+    return true;
+  }
+
   Future<UserProfile?> submitProfile() async {
     _profileValidationRequested = true;
     final profile = buildProfile();
     if (profile != null) {
       await _localDataStore.saveUserProfile(profile);
+      final previousProfile = _profileBeforeEdit;
+      if (_editingProfile &&
+          previousProfile != null &&
+          _profilesDiffer(previousProfile, profile)) {
+        await _localDataStore.saveProfileNeedsPlanRegeneration(true);
+      }
+      _editingProfile = false;
+      _profileBeforeEdit = null;
     }
     notifyListeners();
     return profile;
@@ -254,6 +279,36 @@ class OnboardingViewModel extends ChangeNotifier {
       );
     }
     notifyListeners();
+  }
+
+  void _applyProfile(UserProfile profile) {
+    _setSingleSelection(_goals, profile.goal.value);
+    _setSingleSelection(_dietStyles, profile.dietStyle.value);
+    _setSingleSelection(_activityLevels, profile.activityLevel.value);
+    _setMultiSelection(_allergies, profile.allergies);
+    _setMultiSelection(_mealTiming, profile.mealTiming);
+    _customAversionsInput = profile.customAversions.join(', ');
+    _ageInput = profile.age.toString();
+    _heightCmInput = profile.heightCm.toString();
+    _currentWeightKgInput = _formatDoubleInput(profile.currentWeightKg);
+    _targetWeightKgInput = _formatDoubleInput(profile.targetWeightKg);
+  }
+
+  void _setSingleSelection(List<OnboardingOption> options, String title) {
+    for (var index = 0; index < options.length; index += 1) {
+      options[index] = options[index].copyWith(
+        selected: options[index].title == title,
+      );
+    }
+  }
+
+  void _setMultiSelection(List<OnboardingOption> options, List<String> titles) {
+    final selectedTitles = titles.toSet();
+    for (var index = 0; index < options.length; index += 1) {
+      options[index] = options[index].copyWith(
+        selected: selectedTitles.contains(options[index].title),
+      );
+    }
   }
 
   void _toggle(List<OnboardingOption> options, String title) {
@@ -315,5 +370,26 @@ class OnboardingViewModel extends ChangeNotifier {
     }
 
     return parsed;
+  }
+
+  String _formatDoubleInput(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(1);
+    }
+
+    return value.toString();
+  }
+
+  bool _profilesDiffer(UserProfile first, UserProfile second) {
+    return first.goal != second.goal ||
+        first.dietStyle != second.dietStyle ||
+        !listEquals(first.allergies, second.allergies) ||
+        !listEquals(first.customAversions, second.customAversions) ||
+        first.activityLevel != second.activityLevel ||
+        !listEquals(first.mealTiming, second.mealTiming) ||
+        first.age != second.age ||
+        first.heightCm != second.heightCm ||
+        first.currentWeightKg != second.currentWeightKg ||
+        first.targetWeightKg != second.targetWeightKg;
   }
 }

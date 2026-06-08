@@ -10,6 +10,10 @@ abstract class LocalDataStore {
 
   Future<void> saveUserProfile(UserProfile profile);
 
+  Future<bool> loadProfileNeedsPlanRegeneration();
+
+  Future<void> saveProfileNeedsPlanRegeneration(bool value);
+
   Future<MealPlan?> loadActiveMealPlan();
 
   Future<void> saveActiveMealPlan(MealPlan plan);
@@ -51,6 +55,8 @@ class SharedPreferencesLocalDataStore implements LocalDataStore {
     : _strings = strings ?? SharedPreferencesStringStore();
 
   static const userProfileKey = 'mealcrunchy.v1.user_profile';
+  static const profileNeedsPlanRegenerationKey =
+      'mealcrunchy.v1.profile_needs_plan_regeneration';
   static const activeMealPlanKey = 'mealcrunchy.v1.active_meal_plan';
   static const shoppingListKey = 'mealcrunchy.v1.shopping_list';
 
@@ -68,6 +74,17 @@ class SharedPreferencesLocalDataStore implements LocalDataStore {
   @override
   Future<void> saveUserProfile(UserProfile profile) {
     return _writeJson(userProfileKey, profile.toJson());
+  }
+
+  @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async {
+    final payload = await _readRawJson(profileNeedsPlanRegenerationKey);
+    return payload is bool ? payload : false;
+  }
+
+  @override
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) {
+    return _writeJson(profileNeedsPlanRegenerationKey, value);
   }
 
   @override

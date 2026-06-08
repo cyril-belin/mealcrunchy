@@ -337,6 +337,9 @@ class _MemoryLocalDataStore implements LocalDataStore {
   Future<UserProfile?> loadUserProfile() async => null;
 
   @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async => false;
+
+  @override
   Future<void> saveActiveMealPlan(MealPlan plan) async {}
 
   @override
@@ -349,4 +352,7 @@ class _MemoryLocalDataStore implements LocalDataStore {
 
   @override
   Future<void> saveUserProfile(UserProfile profile) async {}
+
+  @override
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) async {}
 }

@@ -1,5 +1,7 @@
 # Profil et preferences
 
+Statut : Terminee
+
 ## Objectif
 
 Permettre a l'utilisateur de consulter et modifier ses choix d'onboarding depuis l'ecran profil/preferences.
@@ -62,23 +64,31 @@ flutter test
 flutter analyze
 ```
 
-## Erreurs rencontrees et resolution
+Validation realisee le 2026-06-08 :
 
-Aucune erreur documentee a ce stade.
+- `flutter test` : OK.
+- `flutter analyze` : OK, aucune issue.
+- MCP Dart `analyze_files` cible profil/onboarding/data : OK, aucune erreur.
+- MCP Flutter / widget inspector : indisponible, DTD non connecte dans cette session.
+
+## Erreurs rencontrees et resolution
 
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-08 | MCP Flutter `widget_inspector` | `The dart tooling daemon is not connected` | Aucune connexion DTD Flutter active dans cette session | Absence documentee ; validation remplacee par tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` | MCP Dart `analyze_files` OK, `flutter test` OK, `flutter analyze` OK |
+| 2026-06-08 | `flutter test` global | `profile logout signs out and returns to auth` ne trouvait plus `Se déconnecter` | Le test ouvrait le profil sans `UserProfile`, alors que l'ecran affiche maintenant une erreur controlee sans profil sauvegarde | Fixture du test completee avec un profil local sauvegarde | `flutter test test/widget_test.dart` OK, puis `flutter test` OK |
+| 2026-06-08 | `flutter analyze` | `annotate_overrides` dans des fakes et parametre de test inutilise | Nouvelle interface `LocalDataStore` ajoutee dans les fakes de test | Ajout des annotations `@override` et suppression du parametre inutilise | `flutter analyze` OK |
 
 ## Checklist de fin
 
-- [ ] Le profil affiche les vraies preferences sauvegardees.
-- [ ] Les preferences modifiables sont sauvegardees.
-- [ ] Les changements impactant le plan sont signales.
-- [ ] Les tests ViewModel passent.
-- [ ] Les tests widget passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] Le profil affiche les vraies preferences sauvegardees.
+- [x] Les preferences modifiables sont sauvegardees.
+- [x] Les changements impactant le plan sont signales.
+- [x] Les tests ViewModel passent.
+- [x] Les tests widget passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
 
 ## Mise a jour obligatoire du fichier global
 

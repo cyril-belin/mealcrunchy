@@ -1,18 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
-import 'package:mealcrunchy/data/repositories/preferences_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
-import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
-import 'package:mealcrunchy/domain/models/preference_item.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
-import 'package:mealcrunchy/ui/features/profile/view_models/profile_view_model.dart';
 
 void main() {
   group('MealPlanViewModel', () {
@@ -45,44 +41,6 @@ void main() {
       expect(viewModel.summaryState, isA<ViewError<NutritionSummary>>());
     });
   });
-
-  group('ProfileViewModel', () {
-    test(
-      'starts in loading and exposes preferences after load completes',
-      () async {
-        final viewModel = ProfileViewModel(
-          preferencesRepository: _SuccessfulPreferencesRepository(),
-        );
-
-        expect(
-          viewModel.preferencesState,
-          isA<ViewLoading<List<PreferenceItem>>>(),
-        );
-
-        await Future<void>.delayed(Duration.zero);
-
-        final state = viewModel.preferencesState;
-        expect(state, isA<ViewData<List<PreferenceItem>>>());
-        expect(
-          (state as ViewData<List<PreferenceItem>>).data.single.title,
-          'Goal',
-        );
-      },
-    );
-
-    test('exposes an error state when loading fails', () async {
-      final viewModel = ProfileViewModel(
-        preferencesRepository: _ThrowingPreferencesRepository(),
-      );
-
-      await Future<void>.delayed(Duration.zero);
-
-      expect(
-        viewModel.preferencesState,
-        isA<ViewError<List<PreferenceItem>>>(),
-      );
-    });
-  });
 }
 
 const _meal = Meal(
@@ -106,13 +64,6 @@ const _summary = NutritionSummary(
   proteinPercent: 30,
   carbsPercent: 45,
   fatPercent: 25,
-);
-
-const _preference = PreferenceItem(
-  title: 'Goal',
-  value: 'Healthy eating',
-  iconName: 'target',
-  colorToken: 'info',
 );
 
 class _SuccessfulMealPlanRepository extends MealPlanRepository {
@@ -169,6 +120,9 @@ class _NoOpLocalDataStore implements LocalDataStore {
   Future<UserProfile?> loadUserProfile() async => null;
 
   @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async => false;
+
+  @override
   Future<void> saveActiveMealPlan(MealPlan plan) async {}
 
   @override
@@ -179,22 +133,7 @@ class _NoOpLocalDataStore implements LocalDataStore {
 
   @override
   Future<void> saveUserProfile(UserProfile profile) async {}
-}
-
-class _SuccessfulPreferencesRepository extends PreferencesRepository {
-  _SuccessfulPreferencesRepository()
-    : super(contentService: const StaticDesignContentService());
 
   @override
-  Future<List<PreferenceItem>> getPreferences() async => const [_preference];
-}
-
-class _ThrowingPreferencesRepository extends PreferencesRepository {
-  _ThrowingPreferencesRepository()
-    : super(contentService: const StaticDesignContentService());
-
-  @override
-  Future<List<PreferenceItem>> getPreferences() async {
-    throw Exception('load failed');
-  }
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) async {}
 }

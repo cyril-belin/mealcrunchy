@@ -11,7 +11,9 @@ import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_m
 void main() {
   group('OnboardingViewModel', () {
     test('selects a single primary goal', () {
-      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
+      final viewModel = OnboardingViewModel(
+        localDataStore: _SavingLocalDataStore(),
+      );
 
       viewModel.selectGoal('Prendre du muscle');
 
@@ -20,13 +22,17 @@ void main() {
     });
 
     test('starts with no allergy pre-selected', () {
-      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
+      final viewModel = OnboardingViewModel(
+        localDataStore: _SavingLocalDataStore(),
+      );
 
       expect(viewModel.selectedAllergyTitles, isEmpty);
     });
 
     test('toggles allergies as a multi-selection', () {
-      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
+      final viewModel = OnboardingViewModel(
+        localDataStore: _SavingLocalDataStore(),
+      );
 
       viewModel.toggleAllergy('Cacahuètes');
       viewModel.toggleAllergy('Gluten');
@@ -43,7 +49,9 @@ void main() {
     });
 
     test('refuses to build a profile when required metrics are missing', () {
-      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore());
+      final viewModel = OnboardingViewModel(
+        localDataStore: _SavingLocalDataStore(),
+      );
 
       expect(viewModel.isProfileValid, isFalse);
       expect(viewModel.buildProfile(), isNull);
@@ -51,16 +59,17 @@ void main() {
     });
 
     test('builds a valid nutrition profile with selections and metrics', () {
-      final viewModel = OnboardingViewModel(localDataStore: _SavingLocalDataStore())
-        ..selectGoal('Prendre du muscle')
-        ..selectDietStyle('Méditerranéen')
-        ..selectActivityLevel('Très actif')
-        ..toggleAllergy('Gluten')
-        ..updateCustomAversions('coriandre, champignons')
-        ..updateAge('32')
-        ..updateHeightCm('181')
-        ..updateCurrentWeightKg('82.5')
-        ..updateTargetWeightKg('86');
+      final viewModel =
+          OnboardingViewModel(localDataStore: _SavingLocalDataStore())
+            ..selectGoal('Prendre du muscle')
+            ..selectDietStyle('Méditerranéen')
+            ..selectActivityLevel('Très actif')
+            ..toggleAllergy('Gluten')
+            ..updateCustomAversions('coriandre, champignons')
+            ..updateAge('32')
+            ..updateHeightCm('181')
+            ..updateCurrentWeightKg('82.5')
+            ..updateTargetWeightKg('86');
 
       final profile = viewModel.buildProfile();
 
@@ -89,11 +98,79 @@ void main() {
       expect(profile, isNotNull);
       expect(localDataStore.savedProfile?.age, 32);
     });
+
+    test(
+      'prefills selections and metrics from the saved profile for editing',
+      () async {
+        final localDataStore = _SavingLocalDataStore(savedProfile: _profile);
+        final viewModel = OnboardingViewModel(localDataStore: localDataStore);
+
+        final started = await viewModel.startProfileEdit();
+
+        expect(started, isTrue);
+        expect(viewModel.isEditingProfile, isTrue);
+        expect(viewModel.selectedGoalTitle, 'Prendre du muscle');
+        expect(viewModel.selectedDietStyleTitle, 'Méditerranéen');
+        expect(viewModel.selectedActivityLevelTitle, 'Très actif');
+        expect(viewModel.selectedAllergyTitles, <String>['Gluten']);
+        expect(viewModel.selectedMealTimingTitles, <String>[
+          '3 repas classiques',
+        ]);
+        expect(viewModel.customAversionsInput, 'coriandre, champignons');
+        expect(viewModel.ageInput, '32');
+        expect(viewModel.heightCmInput, '181');
+        expect(viewModel.currentWeightKgInput, '82.5');
+        expect(viewModel.targetWeightKgInput, '86.0');
+      },
+    );
+
+    test(
+      'marks the active plan stale when an edited profile changes',
+      () async {
+        final localDataStore = _SavingLocalDataStore(savedProfile: _profile);
+        final viewModel = OnboardingViewModel(localDataStore: localDataStore);
+
+        await viewModel.startProfileEdit();
+        viewModel.selectGoal('Maintenir');
+        await viewModel.submitProfile();
+
+        expect(localDataStore.profileNeedsPlanRegeneration, isTrue);
+      },
+    );
+
+    test(
+      'keeps the active plan fresh when an edited profile is unchanged',
+      () async {
+        final localDataStore = _SavingLocalDataStore(savedProfile: _profile);
+        final viewModel = OnboardingViewModel(localDataStore: localDataStore);
+
+        await viewModel.startProfileEdit();
+        await viewModel.submitProfile();
+
+        expect(localDataStore.profileNeedsPlanRegeneration, isFalse);
+      },
+    );
   });
 }
 
+const _profile = UserProfile(
+  goal: NutritionGoal.buildMuscle,
+  dietStyle: DietStyle.mediterranean,
+  allergies: ['Gluten'],
+  customAversions: ['coriandre', 'champignons'],
+  activityLevel: ActivityLevel.veryActive,
+  mealTiming: ['3 repas classiques'],
+  age: 32,
+  heightCm: 181,
+  currentWeightKg: 82.5,
+  targetWeightKg: 86,
+);
+
 class _SavingLocalDataStore implements LocalDataStore {
+  _SavingLocalDataStore({this.savedProfile});
+
   UserProfile? savedProfile;
+  bool profileNeedsPlanRegeneration = false;
 
   @override
   Future<MealPlan?> loadActiveMealPlan() async => null;
@@ -107,7 +184,12 @@ class _SavingLocalDataStore implements LocalDataStore {
   }
 
   @override
-  Future<UserProfile?> loadUserProfile() async => null;
+  Future<UserProfile?> loadUserProfile() async => savedProfile;
+
+  @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async {
+    return profileNeedsPlanRegeneration;
+  }
 
   @override
   Future<void> saveActiveMealPlan(MealPlan plan) async {}
@@ -121,5 +203,10 @@ class _SavingLocalDataStore implements LocalDataStore {
   @override
   Future<void> saveUserProfile(UserProfile profile) async {
     savedProfile = profile;
+  }
+
+  @override
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) async {
+    profileNeedsPlanRegeneration = value;
   }
 }
