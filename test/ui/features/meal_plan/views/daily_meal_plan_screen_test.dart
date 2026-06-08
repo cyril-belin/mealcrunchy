@@ -121,6 +121,30 @@ void main() {
 
     expect(find.text('Generation reached'), findsOneWidget);
   });
+
+  testWidgets('shopping list button navigates to the shopping list screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _DashboardRouterTestApp(
+        viewModel: MealPlanViewModel(
+          mealPlanRepository: _DashboardMealPlanRepository(),
+          now: () => DateTime(2026, 6, 6),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Voir la liste de courses'),
+      320,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Voir la liste de courses'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shopping list reached'), findsOneWidget);
+  });
 }
 
 class _DashboardTestApp extends StatelessWidget {
@@ -163,6 +187,12 @@ class _DashboardRouterTestApp extends StatelessWidget {
           path: AppRoutes.generatingPlan,
           builder: (context, state) =>
               const Material(child: Center(child: Text('Generation reached'))),
+        ),
+        GoRoute(
+          path: AppRoutes.shoppingList,
+          builder: (context, state) => const Material(
+            child: Center(child: Text('Shopping list reached')),
+          ),
         ),
       ],
     );
@@ -273,7 +303,9 @@ class _CoherenceMealPlanRepository extends MealPlanRepository {
 class _ReplacingDashboardMealPlanRepository
     extends _DashboardMealPlanRepository {
   @override
-  Future<MealPlan> replaceMeal(String mealId) async => _replacementPlan;
+  Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
+    return _replacementPlan;
+  }
 }
 
 class _UnusedAiProxyService extends AiProxyService {

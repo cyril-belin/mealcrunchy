@@ -10,6 +10,7 @@ import 'package:mealcrunchy/ui/features/onboarding/views/onboarding_allergies_sc
 import 'package:mealcrunchy/ui/features/onboarding/views/onboarding_goals_screen.dart';
 import 'package:mealcrunchy/ui/features/onboarding/views/onboarding_metrics_screen.dart';
 import 'package:mealcrunchy/ui/features/profile/views/profile_preferences_screen.dart';
+import 'package:mealcrunchy/ui/features/shopping_list/views/shopping_list_screen.dart';
 import 'package:mealcrunchy/ui/features/splash/views/splash_screen.dart';
 
 GoRouter createAppRouter({
@@ -83,6 +84,10 @@ GoRouter createAppRouter({
             mealId: state.pathParameters['mealId'] ?? '',
           );
         },
+      ),
+      GoRoute(
+        path: AppRoutes.shoppingList,
+        builder: (context, state) => const ShoppingListScreen(),
       ),
       GoRoute(
         path: AppRoutes.profile,

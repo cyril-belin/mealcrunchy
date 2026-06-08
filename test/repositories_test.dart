@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/repositories/preferences_repository.dart';
+import 'package:mealcrunchy/data/repositories/shopping_list_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
 import 'package:mealcrunchy/data/services/static_design_content_service.dart';
@@ -46,6 +47,26 @@ void main() {
       );
 
       expect(localDataStore.activeMealPlan, isNull);
+    });
+
+    test('regenerates the shopping list after generating a plan', () async {
+      final localDataStore = _FakeLocalDataStore();
+      final repository = MealPlanRepository(
+        aiProxyService: _FakeAiProxyService(
+          response: {'plan': _planJson(days: 7)},
+        ),
+        localDataStore: localDataStore,
+        shoppingListRepository: ShoppingListRepository(
+          localDataStore: localDataStore,
+        ),
+        now: () => DateTime.utc(2026, 6, 7, 8),
+      );
+
+      await repository.generateActiveMealPlan(_profile);
+
+      expect(localDataStore.shoppingList.map((item) => item.name), [
+        'Ingredient',
+      ]);
     });
 
     test('loads meals for the current day from the local AI plan', () async {
@@ -107,6 +128,117 @@ void main() {
           aiProxyService.requestedPlanContext?['plan'],
           isA<Map<String, Object?>>(),
         );
+      },
+    );
+
+    test('regenerates the shopping list after replacing a meal', () async {
+      final localDataStore = _FakeLocalDataStore(
+        userProfile: _profile,
+        activeMealPlan: MealPlan.fromAiJson(
+          _planJson(days: 7),
+          generatedAt: DateTime.utc(2026, 6, 7),
+        ),
+      );
+      final repository = MealPlanRepository(
+        aiProxyService: _FakeAiProxyService(
+          replaceResponse: {
+            'meal': _mealJson(
+              id: 'day-2-lunch',
+              type: 'DEJEUNER',
+              name: 'Bowl remplace',
+              ingredients: ['Ingredient remplace'],
+            ),
+          },
+        ),
+        localDataStore: localDataStore,
+        shoppingListRepository: ShoppingListRepository(
+          localDataStore: localDataStore,
+        ),
+        now: () => DateTime.utc(2026, 6, 8),
+      );
+
+      await repository.replaceMeal('day-2-lunch');
+
+      expect(
+        localDataStore.shoppingList.map((item) => item.name),
+        contains('Ingredient remplace'),
+      );
+    });
+
+    test('keeps the original meal id when AI returns a new one', () async {
+      final localDataStore = _FakeLocalDataStore(
+        userProfile: _profile,
+        activeMealPlan: MealPlan.fromAiJson(
+          _planJson(days: 7),
+          generatedAt: DateTime.utc(2026, 6, 7),
+        ),
+      );
+      final repository = MealPlanRepository(
+        aiProxyService: _FakeAiProxyService(
+          replaceResponse: {
+            'meal': _mealJson(
+              id: 'ai-generated-lunch-id',
+              type: 'DEJEUNER',
+              name: 'Bowl remplace',
+            ),
+          },
+        ),
+        localDataStore: localDataStore,
+        now: () => DateTime.utc(2026, 6, 8),
+      );
+
+      final updatedPlan = await repository.replaceMeal('day-2-lunch');
+
+      expect(updatedPlan.days[1].meals[1].id, 'day-2-lunch');
+      expect(updatedPlan.days[1].meals[1].name, 'Bowl remplace');
+      expect(localDataStore.activeMealPlan?.days[1].meals[1].id, 'day-2-lunch');
+    });
+
+    test(
+      'uses the displayed meal when the route id is stale in local storage',
+      () async {
+        final localDataStore = _FakeLocalDataStore(
+          userProfile: _profile,
+          activeMealPlan: MealPlan.fromAiJson(
+            _planJson(days: 7),
+            generatedAt: DateTime.utc(2026, 6, 7),
+          ),
+        );
+        final aiProxyService = _FakeAiProxyService(
+          replaceResponse: {
+            'meal': _mealJson(
+              id: 'ai-generated-lunch-id',
+              type: 'DEJEUNER',
+              name: 'Bowl remplace',
+            ),
+          },
+        );
+        final repository = MealPlanRepository(
+          aiProxyService: aiProxyService,
+          localDataStore: localDataStore,
+          now: () => DateTime.utc(2026, 6, 8),
+        );
+
+        final updatedPlan = await repository.replaceMeal(
+          'stale-route-lunch-id',
+          currentMeal: const Meal(
+            id: 'stale-route-lunch-id',
+            type: 'DEJEUNER',
+            name: 'Saumon grille avec legumes rotis',
+            calories: 650,
+            protein: 50,
+            carbs: 20,
+            fat: 38,
+            imagePrompt: 'salmon',
+            duration: '30 min',
+            ingredients: ['saumon'],
+            instructions: ['cuire'],
+          ),
+        );
+
+        expect(aiProxyService.requestedCurrentMeal?.id, 'stale-route-lunch-id');
+        expect(updatedPlan.days[1].meals[1].id, 'day-2-lunch');
+        expect(updatedPlan.days[1].meals[1].name, 'Bowl remplace');
       },
     );
 
@@ -227,6 +359,7 @@ Map<String, Object?> _mealJson({
   required String id,
   required String type,
   String? name,
+  List<String>? ingredients,
 }) {
   return {
     'id': id,
@@ -238,7 +371,7 @@ Map<String, Object?> _mealJson({
     'fat': 15,
     'imagePrompt': 'healthy meal',
     'duration': '20 min',
-    'ingredients': ['Ingredient'],
+    'ingredients': ingredients ?? ['Ingredient'],
     'instructions': ['Instruction'],
   };
 }
@@ -300,6 +433,7 @@ class _FakeLocalDataStore implements LocalDataStore {
   _FakeLocalDataStore({this.activeMealPlan, this.userProfile});
 
   MealPlan? activeMealPlan;
+  List<ShoppingListItem> shoppingList = const <ShoppingListItem>[];
   final UserProfile? userProfile;
 
   @override
@@ -313,7 +447,7 @@ class _FakeLocalDataStore implements LocalDataStore {
 
   @override
   Future<List<ShoppingListItem>> loadShoppingList() async {
-    return const <ShoppingListItem>[];
+    return shoppingList;
   }
 
   @override
@@ -325,7 +459,9 @@ class _FakeLocalDataStore implements LocalDataStore {
   Future<void> saveConsumedMealIds(String dayKey, Set<String> ids) async {}
 
   @override
-  Future<void> saveShoppingList(List<ShoppingListItem> items) async {}
+  Future<void> saveShoppingList(List<ShoppingListItem> items) async {
+    shoppingList = items;
+  }
 
   @override
   Future<void> saveUserProfile(UserProfile profile) async {}

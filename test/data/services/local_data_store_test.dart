@@ -29,6 +29,34 @@ void main() {
       expect(reloaded?.currentWeightKg, 82.5);
     });
 
+    test(
+      'reloads legacy user profiles saved before accented enum values',
+      () async {
+        await strings.setString(
+          SharedPreferencesLocalDataStore.userProfileKey,
+          '''
+{
+  "goal": "Perdre du poids",
+  "dietStyle": "Mediterraneen",
+  "allergies": ["Cacahuetes"],
+  "customAversions": ["Olives"],
+  "activityLevel": "Moderement actif",
+  "mealTiming": ["3 repas classiques"],
+  "age": 32,
+  "heightCm": 178,
+  "currentWeightKg": 82.5,
+  "targetWeightKg": 76.0
+}
+''',
+        );
+
+        final reloaded = await store.loadUserProfile();
+
+        expect(reloaded?.dietStyle, DietStyle.mediterranean);
+        expect(reloaded?.activityLevel, ActivityLevel.moderatelyActive);
+      },
+    );
+
     test('saves and reloads the active meal plan', () async {
       await store.saveActiveMealPlan(_mealPlan);
 

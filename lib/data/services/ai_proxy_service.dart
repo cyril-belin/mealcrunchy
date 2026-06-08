@@ -104,9 +104,11 @@ class AiProxyService {
       'unauthenticated' => 'Connectez-vous pour utiliser la génération IA.',
       'resource-exhausted' => 'Quota IA temporairement atteint.',
       'invalid-argument' => 'Demande IA invalide.',
+      'not-found' ||
+      'failed-precondition' => 'Génération IA momentanément indisponible.',
       'unavailable' ||
       'network-request-failed' => 'Génération IA momentanément indisponible.',
-      'internal' => 'Réponse IA invalide.',
+      'internal' => 'Génération IA momentanément indisponible.',
       _ => 'Service IA indisponible pour le moment.',
     };
   }

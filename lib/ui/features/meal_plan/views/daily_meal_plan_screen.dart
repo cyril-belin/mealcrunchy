@@ -246,6 +246,12 @@ class _MealPlanContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 22),
+          ElevatedButton.icon(
+            onPressed: () => context.go(AppRoutes.shoppingList),
+            icon: const Icon(Icons.shopping_basket_rounded),
+            label: const Text('Voir la liste de courses'),
+          ),
+          const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () => context.go(AppRoutes.generatingPlan),
             icon: const Icon(Icons.auto_awesome_rounded),

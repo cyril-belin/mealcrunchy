@@ -64,21 +64,22 @@ flutter analyze
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
-
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-07 | `flutter test` cible widget liste de courses | Assertion Flutter `ListTile background color or ink splashes may be invisible` | `CheckboxListTile` etait place dans `SoftCard`, dont le `DecoratedBox` masque les effets Material | Remplacement par une ligne custom avec `InkWell`, `Checkbox`, texte et quantite | `flutter test test/ui/features/shopping_list/views/shopping_list_screen_test.dart` puis `flutter test` |
+| 2026-06-07 | `flutter analyze` | Warning `unused_import` dans `shopping_list_repository.dart` | Import `MealPlan` devenu inutile apres simplification du repository | Import supprime | `flutter analyze` relance avec succes |
+| 2026-06-07 | MCP Flutter `widget_inspector get_widget_tree` | DTD non connecte | Aucune application Flutter active connectee au Dart Tooling Daemon | Absence documentee ; validation realisee par tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` | `flutter test`, `flutter analyze`, MCP Dart OK |
 
 ## Checklist de fin
 
-- [ ] La liste est generee depuis le plan actif.
-- [ ] Les items peuvent etre coches et decoches.
-- [ ] L'etat des cases est persiste.
-- [ ] Les tests service et ViewModel passent.
-- [ ] Les tests widget passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour.
+- [x] La liste est generee depuis le plan actif.
+- [x] Les items peuvent etre coches et decoches.
+- [x] L'etat des cases est persiste.
+- [x] Les tests service et ViewModel passent.
+- [x] Les tests widget passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour.
 
 ## Mise a jour obligatoire du fichier global
 

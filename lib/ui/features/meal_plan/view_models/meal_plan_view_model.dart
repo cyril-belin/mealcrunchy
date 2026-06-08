@@ -107,7 +107,11 @@ class MealPlanViewModel extends ChangeNotifier {
     };
     final targetSummary = _targetSummary;
 
-    if (meals == null || targetSummary == null || replacingMealId != null) {
+    final currentMeal = meals == null ? null : _findMeal(meals, mealId);
+    if (meals == null ||
+        targetSummary == null ||
+        currentMeal == null ||
+        replacingMealId != null) {
       return false;
     }
 
@@ -116,7 +120,10 @@ class MealPlanViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final updatedPlan = await _mealPlanRepository.replaceMeal(mealId);
+      final updatedPlan = await _mealPlanRepository.replaceMeal(
+        mealId,
+        currentMeal: currentMeal,
+      );
       final updatedMeals = updatedPlan.dayFor(_now()).meals;
       _targetSummary = updatedPlan.summary;
       mealsState = ViewData(updatedMeals);

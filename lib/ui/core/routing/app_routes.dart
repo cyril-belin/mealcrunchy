@@ -10,6 +10,7 @@ class AppRoutes {
   static const generatingPlan = '/generating-plan';
   static const mealPlan = '/meal-plan';
   static const mealDetails = '/meal-plan/:mealId';
+  static const shoppingList = '/shopping-list';
   static const profile = '/profile';
 
   static String mealDetailsFor(String mealId) => '/meal-plan/$mealId';

@@ -130,6 +130,26 @@ void main() {
       findsNothing,
     );
   });
+
+  testWidgets('profile logout signs out and returns to auth', (tester) async {
+    final authService = _MutableAuthService(account: _account);
+
+    await tester.pumpWidget(
+      MealCrunchyApp(
+        authRepository: AuthRepository(service: authService),
+        localDataStore: FakeLocalDataStore()..activeMealPlan = _mealPlan,
+        initialLocation: AppRoutes.profile,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Se déconnecter'));
+    await tester.tap(find.text('Se déconnecter'));
+    await tester.pumpAndSettle();
+
+    expect(authService.signOutCount, 1);
+    expect(find.byKey(const ValueKey('auth-email-field')), findsOneWidget);
+  });
 }
 
 AuthRepository _authRepository({required AuthAccount? account}) {
@@ -208,3 +228,46 @@ class _AuthService implements AuthService {
   @override
   Future<void> signOut() async {}
 }
+
+class _MutableAuthService implements AuthService {
+  _MutableAuthService({required this._account});
+
+  AuthAccount? _account;
+  var signOutCount = 0;
+
+  @override
+  Stream<AuthAccount?> authStateChanges() =>
+      Stream<AuthAccount?>.value(_account);
+
+  @override
+  AuthAccount? get currentAccount => _account;
+
+  @override
+  Future<AuthAccount> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return _account ?? _accountFallback;
+  }
+
+  @override
+  Future<AuthAccount> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    return _account ?? _accountFallback;
+  }
+
+  @override
+  Future<void> signOut() async {
+    signOutCount += 1;
+    _account = null;
+  }
+}
+
+const _accountFallback = AuthAccount(
+  uid: 'fallback-user',
+  email: 'fallback@example.com',
+  displayName: 'Fallback User',
+);

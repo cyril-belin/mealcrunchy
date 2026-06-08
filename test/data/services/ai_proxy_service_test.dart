@@ -94,6 +94,30 @@ void main() {
       );
     });
 
+    test(
+      'maps backend deployment errors to an unavailable service error',
+      () async {
+        final service = AiProxyService(
+          client: _FakeAiCallableClient(
+            exception: const AiCallableException(code: 'internal'),
+          ),
+        );
+
+        await expectLater(
+          service.generateMealPlan(profile: _profile),
+          throwsA(
+            isA<AiProxyException>()
+                .having((error) => error.code, 'code', 'internal')
+                .having(
+                  (error) => error.message,
+                  'message',
+                  'Génération IA momentanément indisponible.',
+                ),
+          ),
+        );
+      },
+    );
+
     test('rejects invalid callable response formats', () async {
       final service = AiProxyService(
         client: _FakeAiCallableClient(
