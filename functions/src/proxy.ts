@@ -1,5 +1,15 @@
 import { HttpsError } from "firebase-functions/v2/https";
 
+import {
+  AiQuotaExhaustedError,
+  type AiQuotaKind,
+  type AiQuotaRequest,
+  type AiQuotaStore,
+  type AiQuotaUsage,
+  periodKeyFor,
+  quotaLimits,
+} from "./quotas";
+
 export type AuthContext = {
   uid: string;
 };
@@ -74,11 +84,17 @@ export type AiProxyDependencies = {
   replaceMeal(input: ReplaceMealInput): Promise<unknown>;
 };
 
+export type AiQuotaDependencies = {
+  quotaStore: AiQuotaStore;
+  now?: () => Date;
+};
+
 const defaultLocale = "fr-FR";
 const requiredDays = 7;
 
 export function buildGenerateMealPlanHandler(
   dependencies: AiProxyDependencies,
+  quotaDependencies: AiQuotaDependencies,
 ) {
   return async (request: CallableLikeRequest) => {
     const userId = requireUserId(request);
@@ -86,17 +102,26 @@ export function buildGenerateMealPlanHandler(
     const profile = readProfile(data.profile);
     const days = readDays(data.days);
     const locale = readLocale(data.locale);
+    const quotaRequest = await assertQuotaAvailable(
+      quotaDependencies,
+      userId,
+      "mealPlanGeneration",
+    );
 
     const payload = await callOpenAi(() =>
       dependencies.generateMealPlan({ userId, profile, days, locale }),
     );
     const plan = readMealPlan(payload, days);
+    const usage = await incrementQuota(quotaDependencies, quotaRequest);
 
-    return { plan, usage: null };
+    return { plan, usage };
   };
 }
 
-export function buildReplaceMealHandler(dependencies: AiProxyDependencies) {
+export function buildReplaceMealHandler(
+  dependencies: AiProxyDependencies,
+  quotaDependencies: AiQuotaDependencies,
+) {
   return async (request: CallableLikeRequest) => {
     const userId = requireUserId(request);
     const data = asRecord(request.data);
@@ -104,6 +129,11 @@ export function buildReplaceMealHandler(dependencies: AiProxyDependencies) {
     const currentMeal = readMeal(data.currentMeal);
     const planContext = asRecord(data.planContext);
     const locale = readLocale(data.locale);
+    const quotaRequest = await assertQuotaAvailable(
+      quotaDependencies,
+      userId,
+      "mealReplacement",
+    );
 
     const payload = await callOpenAi(() =>
       dependencies.replaceMeal({
@@ -116,8 +146,9 @@ export function buildReplaceMealHandler(dependencies: AiProxyDependencies) {
     );
     const output = asRecord(payload);
     const meal = readMeal(output.meal ?? payload);
+    const usage = await incrementQuota(quotaDependencies, quotaRequest);
 
-    return { meal };
+    return { meal, usage };
   };
 }
 
@@ -159,6 +190,79 @@ function mapOpenAiError(error: unknown): HttpsError {
   return new HttpsError(
     "unavailable",
     "Generation IA momentanement indisponible.",
+  );
+}
+
+async function assertQuotaAvailable(
+  dependencies: AiQuotaDependencies,
+  userId: string,
+  kind: AiQuotaKind,
+): Promise<AiQuotaRequest> {
+  const quotaRequest = quotaRequestFor(dependencies, userId, kind);
+  const usage = await getQuotaUsage(dependencies, quotaRequest);
+
+  if (usage.remaining <= 0) {
+    throw quotaExceededError();
+  }
+
+  return quotaRequest;
+}
+
+function quotaRequestFor(
+  dependencies: AiQuotaDependencies,
+  userId: string,
+  kind: AiQuotaKind,
+): AiQuotaRequest {
+  const now = dependencies.now?.() ?? new Date();
+  return {
+    uid: userId,
+    kind,
+    periodKey: periodKeyFor(now),
+    limit: quotaLimits[kind],
+  };
+}
+
+async function getQuotaUsage(
+  dependencies: AiQuotaDependencies,
+  request: AiQuotaRequest,
+): Promise<AiQuotaUsage> {
+  try {
+    return await dependencies.quotaStore.getUsage(request);
+  } catch (error) {
+    throw mapQuotaError(error);
+  }
+}
+
+async function incrementQuota(
+  dependencies: AiQuotaDependencies,
+  request: AiQuotaRequest,
+): Promise<AiQuotaUsage> {
+  try {
+    return await dependencies.quotaStore.incrementUsage(request);
+  } catch (error) {
+    throw mapQuotaError(error);
+  }
+}
+
+function mapQuotaError(error: unknown): HttpsError {
+  if (error instanceof AiQuotaExhaustedError) {
+    return quotaExceededError();
+  }
+
+  if (error instanceof HttpsError) {
+    return error;
+  }
+
+  return new HttpsError(
+    "unavailable",
+    "Generation IA momentanement indisponible.",
+  );
+}
+
+function quotaExceededError(): HttpsError {
+  return new HttpsError(
+    "resource-exhausted",
+    "Quota IA temporairement atteint.",
   );
 }
 

@@ -66,6 +66,31 @@ void main() {
 
     expect(find.text('Alternative IA indisponible.'), findsOneWidget);
   });
+
+  testWidgets(
+    'shows the quota error when meal replacement quota is exhausted',
+    (tester) async {
+      await tester.pumpWidget(
+        _MealDetailsTestApp(
+          mealId: _dinner.id,
+          repository: _ThrowingDetailsMealPlanRepository(
+            message: 'Quota IA temporairement atteint.',
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Remplacer'),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.text('Remplacer'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quota IA temporairement atteint.'), findsOneWidget);
+    },
+  );
 }
 
 class _MealDetailsTestApp extends StatelessWidget {
@@ -127,9 +152,15 @@ class _DetailsMealPlanRepository extends MealPlanRepository {
 }
 
 class _ThrowingDetailsMealPlanRepository extends _DetailsMealPlanRepository {
+  _ThrowingDetailsMealPlanRepository({
+    this.message = 'Alternative IA indisponible.',
+  });
+
+  final String message;
+
   @override
   Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
-    throw const MealPlanReplacementException('Alternative IA indisponible.');
+    throw MealPlanReplacementException(message);
   }
 }
 

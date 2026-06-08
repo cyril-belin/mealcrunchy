@@ -161,6 +161,28 @@ void main() {
         );
       },
     );
+
+    test(
+      'exposes the quota error when monthly replacement quota is exhausted',
+      () async {
+        final viewModel = MealPlanViewModel(
+          mealPlanRepository: _ThrowingReplacementMealPlanRepository(
+            localDataStore: FakeLocalDataStore(),
+            message: 'Quota IA temporairement atteint.',
+          ),
+          now: () => DateTime(2026, 6, 6),
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        final success = await viewModel.replaceMeal('breakfast');
+
+        expect(success, isFalse);
+        expect(
+          viewModel.replacementErrorMessage,
+          'Quota IA temporairement atteint.',
+        );
+      },
+    );
   });
 }
 
@@ -257,11 +279,16 @@ class _ReplacingMealPlanRepository extends _TrackingMealPlanRepository {
 
 class _ThrowingReplacementMealPlanRepository
     extends _TrackingMealPlanRepository {
-  _ThrowingReplacementMealPlanRepository({required super.localDataStore});
+  _ThrowingReplacementMealPlanRepository({
+    required super.localDataStore,
+    this.message = 'Alternative IA indisponible.',
+  });
+
+  final String message;
 
   @override
   Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
-    throw const MealPlanReplacementException('Alternative IA indisponible.');
+    throw MealPlanReplacementException(message);
   }
 }
 

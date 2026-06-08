@@ -50,6 +50,24 @@ void main() {
     expect(repository.generateCount, 2);
     expect(find.text('Meal plan reached'), findsOneWidget);
   });
+
+  testWidgets('shows the quota error when monthly plan quota is exhausted', (
+    tester,
+  ) async {
+    final repository = _WidgetMealPlanRepository(
+      failuresRemaining: 1,
+      generationException: const AiProxyException(
+        code: 'resource-exhausted',
+        message: 'Quota IA temporairement atteint.',
+      ),
+    );
+
+    await tester.pumpWidget(_app(repository: repository, profile: _profile));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Quota IA temporairement atteint.'), findsOneWidget);
+    expect(find.text('Meal plan reached'), findsNothing);
+  });
 }
 
 Widget _app({
@@ -129,13 +147,16 @@ const _meal = Meal(
 );
 
 class _WidgetMealPlanRepository extends MealPlanRepository {
-  _WidgetMealPlanRepository({this.failuresRemaining = 0})
-    : super(
-        aiProxyService: _UnusedAiProxyService(),
-        localDataStore: _WidgetLocalDataStore(userProfile: _profile),
-      );
+  _WidgetMealPlanRepository({
+    this.failuresRemaining = 0,
+    this.generationException,
+  }) : super(
+         aiProxyService: _UnusedAiProxyService(),
+         localDataStore: _WidgetLocalDataStore(userProfile: _profile),
+       );
 
   int failuresRemaining;
+  final Object? generationException;
   int generateCount = 0;
 
   @override
@@ -143,7 +164,7 @@ class _WidgetMealPlanRepository extends MealPlanRepository {
     generateCount += 1;
     if (failuresRemaining > 0) {
       failuresRemaining -= 1;
-      throw Exception('Generation impossible');
+      throw generationException ?? Exception('Generation impossible');
     }
     return _plan;
   }

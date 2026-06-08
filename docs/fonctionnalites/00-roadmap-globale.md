@@ -36,7 +36,7 @@ Chaque nouvelle fonctionnalite doit etre traitee dans une nouvelle fenetre ou un
 | 8 | Remplacement repas | Terminee | [remplacement-repas.md](remplacement-repas.md) |
 | 9 | Liste de courses | Terminee | [liste-courses.md](liste-courses.md) |
 | 10 | Profil et preferences | Terminee | [profil-preferences.md](profil-preferences.md) |
-| 11 | Quotas IA | A faire | [quotas-ia.md](quotas-ia.md) |
+| 11 | Quotas IA | Terminee | [quotas-ia.md](quotas-ia.md) |
 
 ## Regles communes obligatoires
 
@@ -59,9 +59,9 @@ Pour chaque fonctionnalite :
 ## Derniere mise a jour
 
 - Date : 2026-06-08
-- Changement : Profil et preferences terminee avec affichage du vrai profil sauvegarde, edition via onboarding pre-rempli, suppression du fallback statique, flag local de regeneration du plan, tests repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart valides.
+- Changement : Quotas IA terminee avec quotas mensuels serveur Firestore Admin, limites 1 generation de plan et 10 remplacements par compte, verification avant OpenAI, consommation apres reponse valide, tests Functions/Flutter, `flutter test`, `flutter analyze` et MCP Dart valides.
 - Fonctionnalite active : aucune.
-- Prochaine fonctionnalite autorisee : Quotas IA.
+- Prochaine fonctionnalite autorisee : a definir.
 
 ## Erreurs importantes rencontrees
 
@@ -84,6 +84,7 @@ Pour chaque fonctionnalite :
 | 2026-06-07 | Liste de courses | MCP Flutter / DTD non connecte pendant la verification widget live | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files`. |
 | 2026-06-08 | Profil et preferences | MCP Flutter / DTD non connecte pendant la verification widget live | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files`. |
 | 2026-06-08 | Profil et preferences | `widget_test.dart` ouvrait le profil sans `UserProfile`, ce qui affichait l'etat d'erreur au lieu de l'action de deconnexion | Fixture de test completee avec un profil local sauvegarde, puis `flutter test test/widget_test.dart` et `flutter test` relances avec succes. |
+| 2026-06-08 | Quotas IA | MCP Flutter `widget_inspector get_widget_tree` retourne `Bad state: No element` sur l'app connectee au DTD | Absence documentee dans le fichier de fonctionnalite ; validation UI realisee avec tests widget generation/remplacement, `flutter test`, `flutter analyze` et MCP Dart `analyze_files`. |
 
 ## Historique de validation
 
@@ -101,3 +102,4 @@ Pour chaque fonctionnalite :
 | 2026-06-07 | Remplacement repas | Terminee | `MealPlan.replaceMeal`, repository branche sur `AiProxyService.replaceMeal`, profil et plan local requis, validation id/type de l'alternative, sauvegarde du plan modifie, boutons dashboard/detail avec loading et SnackBar, tests modele/repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
 | 2026-06-07 | Liste de courses | Terminee | `ShoppingListRepository` genere les courses depuis les ingredients du plan actif, conserve les cases cochees compatibles, regenere apres generation/remplacement de plan, ecran dedie `/shopping-list`, navigation dashboard, tests repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
 | 2026-06-08 | Profil et preferences | Terminee | Profil branche sur `UserProfile` local et compte auth, preferences editables via onboarding pre-rempli, flag local de regeneration du plan apres changement, suppression du contenu statique, tests repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
+| 2026-06-08 | Quotas IA | Terminee | Quotas mensuels serveur stockes dans `aiQuotas`, limites 1 generation de plan et 10 remplacements par compte, erreur `resource-exhausted` avant OpenAI quand quota epuise, consommation apres payload IA valide, `usage` reel retourne par le proxy, tests Functions/Flutter, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
