@@ -67,7 +67,7 @@ void main() {
               .having(
                 (error) => error.message,
                 'message',
-                'Generation IA momentanement indisponible.',
+                'Génération IA momentanément indisponible.',
               ),
         ),
       );

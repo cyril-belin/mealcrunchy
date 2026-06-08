@@ -236,6 +236,7 @@ MealPlan _stubMealPlan() {
             'protein': 30,
             'carbs': 50,
             'fat': 15,
+            'imagePrompt': 'repas test',
             'duration': '20 min',
             'ingredients': ['Ingredient 1'],
             'instructions': ['Etape 1'],

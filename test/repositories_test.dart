@@ -94,7 +94,7 @@ void main() {
       final preferences = await repository.getPreferences();
 
       expect(preferences, isNotEmpty);
-      expect(preferences.first.title, 'Objectifs sante');
+      expect(preferences.first.title, 'Objectifs santé');
     });
 
     test('maps a locally saved profile to preference items', () async {
@@ -105,7 +105,7 @@ void main() {
 
       final preferences = await repository.getPreferences();
 
-      expect(preferences.first.title, 'Objectifs sante');
+      expect(preferences.first.title, 'Objectifs santé');
       expect(preferences.first.value, 'Perdre du poids');
       expect(preferences[2].value, 'Cacahuetes - Olives');
     });
@@ -127,7 +127,7 @@ const _profile = UserProfile(
 
 const _aiException = AiProxyException(
   code: 'unavailable',
-  message: 'Generation IA momentanement indisponible.',
+  message: 'Génération IA momentanément indisponible.',
 );
 
 Map<String, Object?> _planJson({required int days}) {
