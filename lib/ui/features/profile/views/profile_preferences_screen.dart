@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/domain/models/preference_item.dart';
+import 'package:mealcrunchy/domain/models/profile_preferences.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 import 'package:mealcrunchy/ui/core/theme/app_colors.dart';
@@ -8,6 +10,7 @@ import 'package:mealcrunchy/ui/core/widgets/app_icon.dart';
 import 'package:mealcrunchy/ui/core/widgets/app_scaffold.dart';
 import 'package:mealcrunchy/ui/core/widgets/design_primitives.dart';
 import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
+import 'package:mealcrunchy/ui/features/onboarding/view_models/onboarding_view_model.dart';
 import 'package:mealcrunchy/ui/features/profile/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -17,27 +20,33 @@ class ProfilePreferencesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<ProfileViewModel>();
+    final account = context.watch<AuthViewModel>().account;
 
-    return switch (viewModel.preferencesState) {
-      ViewLoading<List<PreferenceItem>>() => const AppScaffold(
+    return switch (viewModel.profileState) {
+      ViewLoading<ProfilePreferences>() => const AppScaffold(
         scrollable: false,
         child: Center(child: CircularProgressIndicator()),
       ),
-      ViewError<List<PreferenceItem>>(message: final message) =>
+      ViewError<ProfilePreferences>(message: final message) =>
         _ProfileErrorScaffold(message: message, onRetry: viewModel.load),
-      ViewData<List<PreferenceItem>>(data: final preferences) =>
-        _ProfileContent(preferences: preferences),
+      ViewData<ProfilePreferences>(data: final profilePreferences) =>
+        _ProfileContent(data: profilePreferences, account: account),
     };
   }
 }
 
 class _ProfileContent extends StatelessWidget {
-  const _ProfileContent({required this.preferences});
+  const _ProfileContent({required this.data, required this.account});
 
-  final List<PreferenceItem> preferences;
+  final ProfilePreferences data;
+  final AuthAccount? account;
 
   @override
   Widget build(BuildContext context) {
+    final profile = data.profile;
+    final displayName = _displayName(account);
+    final email = account?.email ?? 'Compte connecté';
+
     return AppScaffold(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -77,34 +86,47 @@ class _ProfileContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Alex Rivers',
+                  displayName,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 Text(
-                  'alex.rivers@example.com',
+                  email,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.secondaryText,
                   ),
                 ),
                 const SizedBox(height: 18),
                 Row(
-                  children: const [
+                  children: [
                     Expanded(
-                      child: _ProfileStat(value: '72.5 kg', label: 'Actuel'),
+                      child: _ProfileStat(
+                        value: _formatWeight(profile.currentWeightKg),
+                        label: 'Actuel',
+                      ),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: _ProfileStat(value: '68.0 kg', label: 'Cible'),
+                      child: _ProfileStat(
+                        value: _formatWeight(profile.targetWeightKg),
+                        label: 'Cible',
+                      ),
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: 10),
                     Expanded(
-                      child: _ProfileStat(value: '1 850', label: 'Cal/jour'),
+                      child: _ProfileStat(
+                        value: _formatCalories(data.dailyTargetCalories),
+                        label: 'Cal/jour',
+                      ),
                     ),
                   ],
                 ),
               ],
             ),
           ),
+          if (data.profileNeedsPlanRegeneration) ...[
+            const SizedBox(height: 16),
+            const _RegenerationBanner(),
+          ],
           const SizedBox(height: 24),
           Row(
             children: [
@@ -115,44 +137,39 @@ class _ProfileContent extends StatelessWidget {
                 ),
               ),
               TextButton.icon(
-                onPressed: () => context.go(AppRoutes.onboardingGoals),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Refaire le quiz'),
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final started = await context
+                      .read<OnboardingViewModel>()
+                      .startProfileEdit();
+                  if (!context.mounted) {
+                    return;
+                  }
+
+                  if (started) {
+                    context.go(AppRoutes.onboardingGoals);
+                    return;
+                  }
+
+                  messenger
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(
+                      const SnackBar(
+                        content: Text('Profil indisponible pour modification.'),
+                      ),
+                    );
+                },
+                icon: const Icon(Icons.edit_rounded),
+                label: const Text('Modifier'),
               ),
             ],
           ),
           const SizedBox(height: 10),
-          ...preferences.map(
+          ...data.preferenceItems.map(
             (preference) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _PreferenceRow(preference: preference),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Paramètres du compte',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: 10),
-          const _SettingsRow(
-            icon: Icons.notifications_active_rounded,
-            title: 'Notifications',
-            subtitle: 'Rappels de repas et rapports hebdomadaires',
-            message:
-                'Les paramètres de notification ne sont pas encore connectés.',
-          ),
-          const _SettingsRow(
-            icon: Icons.lock_rounded,
-            title: 'Confidentialité et sécurité',
-            subtitle: 'Gérer vos données et votre compte',
-            message:
-                'Les paramètres de confidentialité ne sont pas encore connectés.',
-          ),
-          const _SettingsRow(
-            icon: Icons.help_outline_rounded,
-            title: 'Centre d\'aide',
-            subtitle: 'FAQ et support',
-            message: 'Le centre d\'aide n\'est pas encore connecté.',
           ),
           const SizedBox(height: 18),
           OutlinedButton.icon(
@@ -165,6 +182,19 @@ class _ProfileContent extends StatelessWidget {
       ),
     );
   }
+
+  String _displayName(AuthAccount? account) {
+    final name = account?.displayName?.trim();
+    if (name != null && name.isNotEmpty) {
+      return name;
+    }
+
+    return 'Utilisateur MealCrunchy';
+  }
+
+  String _formatWeight(double value) => '${value.toStringAsFixed(1)} kg';
+
+  String _formatCalories(int? value) => value?.toString() ?? 'À revoir';
 }
 
 class _ProfileErrorScaffold extends StatelessWidget {
@@ -210,6 +240,48 @@ class _ProfileErrorScaffold extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RegenerationBanner extends StatelessWidget {
+  const _RegenerationBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return SoftCard(
+      color: AppColors.warning.withValues(alpha: 0.08),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: AppColors.warning),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Plan à régénérer',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Vos préférences ont changé. Régénérez votre plan pour aligner les prochains repas.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.secondaryText,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => context.go(AppRoutes.generatingPlan),
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('Régénérer le plan'),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -280,39 +352,6 @@ class _PreferenceRow extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _SettingsRow extends StatelessWidget {
-  const _SettingsRow({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.message,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      onTap: () {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(message)));
-      },
-      leading: CircleAvatar(
-        backgroundColor: AppColors.surfaceVariant,
-        child: Icon(icon, color: AppColors.secondaryText),
-      ),
-      title: Text(title, style: Theme.of(context).textTheme.titleSmall),
-      subtitle: Text(subtitle),
-      trailing: const Icon(Icons.chevron_right_rounded),
     );
   }
 }

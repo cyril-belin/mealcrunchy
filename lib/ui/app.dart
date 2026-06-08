@@ -7,7 +7,6 @@ import 'package:mealcrunchy/data/repositories/shopping_list_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
-import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/ui/core/routing/app_router.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
@@ -35,7 +34,6 @@ class MealCrunchyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider(create: (_) => const StaticDesignContentService()),
         Provider<AiProxyService>(create: (_) => AiProxyService()),
         Provider<AuthService>(create: (_) => FirebaseAuthService()),
         ProxyProvider<AuthService, AuthRepository>(
@@ -68,12 +66,9 @@ class MealCrunchyApp extends StatelessWidget {
                 );
               },
         ),
-        ProxyProvider<StaticDesignContentService, PreferencesRepository>(
-          update: (context, contentService, _) {
-            return PreferencesRepository(
-              contentService: contentService,
-              localDataStore: context.read<LocalDataStore>(),
-            );
+        ProxyProvider<LocalDataStore, PreferencesRepository>(
+          update: (_, localDataStore, _) {
+            return PreferencesRepository(localDataStore: localDataStore);
           },
         ),
         ChangeNotifierProxyProvider2<

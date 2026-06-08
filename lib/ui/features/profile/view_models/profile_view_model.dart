@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:mealcrunchy/data/repositories/preferences_repository.dart';
-import 'package:mealcrunchy/domain/models/preference_item.dart';
+import 'package:mealcrunchy/domain/models/profile_preferences.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 
 class ProfileViewModel extends ChangeNotifier {
@@ -10,17 +10,17 @@ class ProfileViewModel extends ChangeNotifier {
 
   final PreferencesRepository preferencesRepository;
 
-  ViewState<List<PreferenceItem>> preferencesState = const ViewLoading();
+  ViewState<ProfilePreferences> profileState = const ViewLoading();
 
   Future<void> load() async {
-    preferencesState = const ViewLoading();
+    profileState = const ViewLoading();
     notifyListeners();
 
     try {
-      final preferences = await preferencesRepository.getPreferences();
-      preferencesState = ViewData(preferences);
+      final preferences = await preferencesRepository.getProfilePreferences();
+      profileState = ViewData(preferences);
     } catch (error) {
-      preferencesState = ViewError(error.toString());
+      profileState = ViewError(error.toString());
     }
 
     notifyListeners();

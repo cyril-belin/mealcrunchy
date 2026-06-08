@@ -205,6 +205,12 @@ class _FakeLocalDataStore implements LocalDataStore {
   Future<void> saveUserProfile(UserProfile profile) async {}
 
   @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async => false;
+
+  @override
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) async {}
+
+  @override
   Future<MealPlan?> loadActiveMealPlan() async => null;
 
   @override

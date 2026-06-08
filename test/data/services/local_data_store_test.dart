@@ -76,9 +76,18 @@ void main() {
       expect(mealIds, {'breakfast', 'lunch'});
     });
 
+    test('saves and reloads the profile regeneration flag', () async {
+      expect(await store.loadProfileNeedsPlanRegeneration(), isFalse);
+
+      await store.saveProfileNeedsPlanRegeneration(true);
+
+      expect(await store.loadProfileNeedsPlanRegeneration(), isTrue);
+    });
+
     test('returns empty or null values when data is absent', () async {
       expect(await store.loadUserProfile(), isNull);
       expect(await store.loadActiveMealPlan(), isNull);
+      expect(await store.loadProfileNeedsPlanRegeneration(), isFalse);
       expect(await store.loadConsumedMealIds('2026-06-06'), isEmpty);
       expect(await store.loadShoppingList(), isEmpty);
     });

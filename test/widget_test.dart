@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/auth_repository.dart';
 import 'package:mealcrunchy/data/services/auth_service.dart';
+import 'package:mealcrunchy/domain/models/activity_level.dart';
 import 'package:mealcrunchy/domain/models/auth_account.dart';
+import 'package:mealcrunchy/domain/models/diet_style.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
+import 'package:mealcrunchy/domain/models/nutrition_goal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
+import 'package:mealcrunchy/domain/models/user_profile.dart';
 import 'package:mealcrunchy/ui/app.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -137,7 +141,9 @@ void main() {
     await tester.pumpWidget(
       MealCrunchyApp(
         authRepository: AuthRepository(service: authService),
-        localDataStore: FakeLocalDataStore()..activeMealPlan = _mealPlan,
+        localDataStore: FakeLocalDataStore()
+          ..userProfile = _profile
+          ..activeMealPlan = _mealPlan,
         initialLocation: AppRoutes.profile,
       ),
     );
@@ -160,6 +166,19 @@ const _account = AuthAccount(
   uid: 'user-1',
   email: 'alex@example.com',
   displayName: 'Alex Rivers',
+);
+
+const _profile = UserProfile(
+  goal: NutritionGoal.loseWeight,
+  dietStyle: DietStyle.mediterranean,
+  allergies: ['Cacahuètes'],
+  customAversions: ['Olives'],
+  activityLevel: ActivityLevel.moderatelyActive,
+  mealTiming: ['3 repas classiques'],
+  age: 32,
+  heightCm: 178,
+  currentWeightKg: 82.5,
+  targetWeightKg: 76,
 );
 
 final _mealPlan = MealPlan(

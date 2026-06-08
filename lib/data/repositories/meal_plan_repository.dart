@@ -24,6 +24,7 @@ class MealPlanRepository {
     final planJson = _asJsonMap(payload['plan']);
     final plan = MealPlan.fromAiJson(planJson, generatedAt: _now());
     await localDataStore.saveActiveMealPlan(plan);
+    await localDataStore.saveProfileNeedsPlanRegeneration(false);
     await shoppingListRepository?.regenerateFromActivePlan();
     return plan;
   }

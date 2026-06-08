@@ -6,6 +6,7 @@ import 'package:mealcrunchy/domain/models/user_profile.dart';
 class FakeLocalDataStore implements LocalDataStore {
   UserProfile? userProfile;
   MealPlan? activeMealPlan;
+  bool profileNeedsPlanRegeneration = false;
   final Map<String, Set<String>> consumedMealIdsByDay = {};
   List<ShoppingListItem> shoppingList = const <ShoppingListItem>[];
 
@@ -22,6 +23,11 @@ class FakeLocalDataStore implements LocalDataStore {
 
   @override
   Future<UserProfile?> loadUserProfile() async => userProfile;
+
+  @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async {
+    return profileNeedsPlanRegeneration;
+  }
 
   @override
   Future<void> saveActiveMealPlan(MealPlan plan) async {
@@ -41,5 +47,10 @@ class FakeLocalDataStore implements LocalDataStore {
   @override
   Future<void> saveUserProfile(UserProfile profile) async {
     userProfile = profile;
+  }
+
+  @override
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) async {
+    profileNeedsPlanRegeneration = value;
   }
 }

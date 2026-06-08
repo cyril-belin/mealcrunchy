@@ -1,38 +1,30 @@
 import 'package:mealcrunchy/data/services/local_data_store.dart';
-import 'package:mealcrunchy/data/services/static_design_content_service.dart';
 import 'package:mealcrunchy/domain/models/preference_item.dart';
+import 'package:mealcrunchy/domain/models/profile_preferences.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
 
 class PreferencesRepository {
-  const PreferencesRepository({
-    required this.contentService,
-    this.localDataStore,
-  });
+  const PreferencesRepository({required this.localDataStore});
 
-  final StaticDesignContentService contentService;
-  final LocalDataStore? localDataStore;
+  final LocalDataStore localDataStore;
 
-  Future<List<PreferenceItem>> getPreferences() async {
-    final profile = await _loadLocalProfile();
-    if (profile != null) {
-      return _preferencesFromProfile(profile);
+  Future<ProfilePreferences> getProfilePreferences() async {
+    final profile = await localDataStore.loadUserProfile();
+    if (profile == null) {
+      throw const ProfilePreferencesUnavailableException(
+        'Aucun profil nutritionnel sauvegardé.',
+      );
     }
 
-    final items = await contentService.fetchPreferenceItems();
-    return items.map(PreferenceItem.fromJson).toList(growable: false);
-  }
-
-  Future<UserProfile?> _loadLocalProfile() async {
-    final localDataStore = this.localDataStore;
-    if (localDataStore == null) {
-      return null;
-    }
-
-    try {
-      return localDataStore.loadUserProfile();
-    } catch (_) {
-      return null;
-    }
+    final plan = await localDataStore.loadActiveMealPlan();
+    final needsPlanRegeneration = await localDataStore
+        .loadProfileNeedsPlanRegeneration();
+    return ProfilePreferences(
+      profile: profile,
+      preferenceItems: _preferencesFromProfile(profile),
+      dailyTargetCalories: plan?.summary.targetCalories,
+      profileNeedsPlanRegeneration: needsPlanRegeneration,
+    );
   }
 
   List<PreferenceItem> _preferencesFromProfile(UserProfile profile) {
@@ -67,6 +59,12 @@ class PreferencesRepository {
         colorToken: 'warning',
       ),
       PreferenceItem(
+        title: 'Horaires de repas',
+        value: _joinOrFallback(profile.mealTiming, 'Non renseignés'),
+        iconName: 'timer',
+        colorToken: 'info',
+      ),
+      PreferenceItem(
         title: 'Mensurations',
         value:
             '${profile.age} ans - ${profile.heightCm} cm - '
@@ -84,4 +82,13 @@ class PreferencesRepository {
 
     return values.join(' - ');
   }
+}
+
+class ProfilePreferencesUnavailableException implements Exception {
+  const ProfilePreferencesUnavailableException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
 }

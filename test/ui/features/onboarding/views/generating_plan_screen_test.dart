@@ -180,6 +180,9 @@ class _WidgetLocalDataStore implements LocalDataStore {
   Future<UserProfile?> loadUserProfile() async => userProfile;
 
   @override
+  Future<bool> loadProfileNeedsPlanRegeneration() async => false;
+
+  @override
   Future<void> saveActiveMealPlan(MealPlan plan) async {}
 
   @override
@@ -190,4 +193,7 @@ class _WidgetLocalDataStore implements LocalDataStore {
 
   @override
   Future<void> saveUserProfile(UserProfile profile) async {}
+
+  @override
+  Future<void> saveProfileNeedsPlanRegeneration(bool value) async {}
 }
