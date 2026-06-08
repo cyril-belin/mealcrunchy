@@ -7,6 +7,7 @@ import {
   buildGenerateMealPlanHandler,
   buildReplaceMealHandler,
 } from "./proxy";
+import { buildFirestoreAiQuotaStore } from "./quotas";
 
 initializeApp();
 
@@ -23,10 +24,22 @@ function openAiDependencies() {
   });
 }
 
+function quotaDependencies() {
+  return {
+    quotaStore: buildFirestoreAiQuotaStore(),
+    now: () => new Date(),
+  };
+}
+
 export const generateMealPlan = onCall(callableOptions, (request) => {
-  return buildGenerateMealPlanHandler(openAiDependencies())(request);
+  return buildGenerateMealPlanHandler(
+    openAiDependencies(),
+    quotaDependencies(),
+  )(request);
 });
 
 export const replaceMeal = onCall(callableOptions, (request) => {
-  return buildReplaceMealHandler(openAiDependencies())(request);
+  return buildReplaceMealHandler(openAiDependencies(), quotaDependencies())(
+    request,
+  );
 });

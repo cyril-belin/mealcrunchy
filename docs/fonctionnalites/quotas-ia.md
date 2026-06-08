@@ -4,6 +4,14 @@
 
 Limiter l'usage gratuit des generations IA par compte afin de controler les couts OpenAI et eviter les abus.
 
+## Limites MVP retenues
+
+- Periode : mensuelle UTC, cle `YYYY-MM`.
+- Generation de plan : 1 generation par compte et par mois.
+- Remplacement de repas : 10 remplacements par compte et par mois.
+- Stockage serveur : collection Firestore Admin `aiQuotas`, document `${uid}_${periodKey}`.
+- Champs serveur : `uid`, `periodKey`, `mealPlanGenerationsUsed`, `mealReplacementsUsed`, `updatedAt`.
+
 ## Perimetre inclus
 
 - Quota de generation de plan.
@@ -58,32 +66,34 @@ Limiter l'usage gratuit des generations IA par compte afin de controler les cout
 
 ## Commandes de validation
 
-Les commandes exactes des functions dependront de la configuration Firebase. Au minimum pour l'app :
-
 ```bash
+cd functions && npm test
+flutter test test/data/services/ai_proxy_service_test.dart test/ui/features/onboarding/views/generating_plan_screen_test.dart test/ui/features/meal_plan/view_models/meal_plan_view_model_test.dart test/ui/features/meal_plan/views/meal_details_screen_test.dart
 flutter test
 flutter analyze
 ```
 
-Ajouter ici les commandes Firebase executees pendant l'implementation.
+Validation MCP Dart : `analyze_files` sur les services et ViewModels IA/quota.
+
+Validation MCP Flutter : DTD connecte, mais `widget_inspector get_widget_tree` a retourne `Bad state: No element` sur l'app connectee ; validation UI realisee par tests widget.
 
 ## Erreurs rencontrees et resolution
 
-Aucune erreur documentee a ce stade.
-
 | Date | Commande ou action | Erreur | Cause | Resolution | Retest |
 |---|---|---|---|---|---|
+| 2026-06-08 | `git switch -c codex/quotas-ia` | `Operation not permitted` sur `.git/refs/heads/...lock` | Sandbox en lecture seule sur `.git` | Commande relancee avec autorisation d'ecriture Git | Branche `codex/quotas-ia` creee |
+| 2026-06-08 | MCP Flutter `widget_inspector get_widget_tree` | `Bad state: No element` | App connectee au DTD sans element inspectable disponible | Absence d'inspection widget live documentee ; validation UI couverte par tests widget | Tests widget quota generation/remplacement |
 
 ## Checklist de fin
 
-- [ ] Le quota est verifie cote serveur.
-- [ ] Le quota est decremente seulement apres succes valide.
-- [ ] L'utilisateur voit un message clair si le quota est atteint.
-- [ ] Les tests proxy passent.
-- [ ] Les tests Flutter passent.
-- [ ] `flutter test` passe.
-- [ ] `flutter analyze` passe.
-- [ ] La roadmap globale est mise a jour avec `Terminee`.
+- [x] Le quota est verifie cote serveur.
+- [x] Le quota est decremente seulement apres succes valide.
+- [x] L'utilisateur voit un message clair si le quota est atteint.
+- [x] Les tests proxy passent.
+- [x] Les tests Flutter passent.
+- [x] `flutter test` passe.
+- [x] `flutter analyze` passe.
+- [x] La roadmap globale est mise a jour avec `Terminee`.
 
 ## Mise a jour obligatoire du fichier global
 
