@@ -7,6 +7,7 @@ import 'package:mealcrunchy/ui/core/theme/app_colors.dart';
 import 'package:mealcrunchy/ui/core/widgets/app_icon.dart';
 import 'package:mealcrunchy/ui/core/widgets/app_scaffold.dart';
 import 'package:mealcrunchy/ui/core/widgets/design_primitives.dart';
+import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
 import 'package:mealcrunchy/ui/features/profile/view_models/profile_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -155,7 +156,7 @@ class _ProfileContent extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           OutlinedButton.icon(
-            onPressed: () => context.go(AppRoutes.auth),
+            onPressed: () => context.read<AuthViewModel>().signOut(),
             icon: const Icon(Icons.logout_rounded),
             label: const Text('Se déconnecter'),
             style: OutlinedButton.styleFrom(foregroundColor: AppColors.error),

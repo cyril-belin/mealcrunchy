@@ -128,7 +128,7 @@ class _DetailsMealPlanRepository extends MealPlanRepository {
 
 class _ThrowingDetailsMealPlanRepository extends _DetailsMealPlanRepository {
   @override
-  Future<MealPlan> replaceMeal(String mealId) async {
+  Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
     throw const MealPlanReplacementException('Alternative IA indisponible.');
   }
 }

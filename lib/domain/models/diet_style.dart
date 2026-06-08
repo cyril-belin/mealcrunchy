@@ -15,9 +15,19 @@ enum DietStyle {
   final String value;
 
   static DietStyle fromValue(String value) {
+    final legacyValue = _legacyValues[value];
+    if (legacyValue != null) {
+      return legacyValue;
+    }
+
     return values.firstWhere(
       (style) => style.value == value,
       orElse: () => throw FormatException('Style alimentaire inconnu : $value'),
     );
   }
+
+  static const _legacyValues = {
+    'Vegetarien': vegetarian,
+    'Mediterraneen': mediterranean,
+  };
 }

@@ -34,7 +34,7 @@ Chaque nouvelle fonctionnalite doit etre traitee dans une nouvelle fenetre ou un
 | 6 | Dashboard suivi quotidien | Terminee | [dashboard-suivi-quotidien.md](dashboard-suivi-quotidien.md) |
 | 7 | Detail repas | Terminee | [detail-repas.md](detail-repas.md) |
 | 8 | Remplacement repas | Terminee | [remplacement-repas.md](remplacement-repas.md) |
-| 9 | Liste de courses | A faire | [liste-courses.md](liste-courses.md) |
+| 9 | Liste de courses | Terminee | [liste-courses.md](liste-courses.md) |
 | 10 | Profil et preferences | A faire | [profil-preferences.md](profil-preferences.md) |
 | 11 | Quotas IA | A faire | [quotas-ia.md](quotas-ia.md) |
 
@@ -59,9 +59,9 @@ Pour chaque fonctionnalite :
 ## Derniere mise a jour
 
 - Date : 2026-06-07
-- Changement : remplacement repas termine avec action depuis dashboard et detail, appel reel `AiProxyService.replaceMeal`, validation de l'alternative, conservation des autres repas, sauvegarde locale du plan modifie, etats loading/succes/erreur, tests modele/repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart valides.
+- Changement : liste de courses terminee avec generation depuis le plan actif, fusion simple des ingredients, cases cochees persistantes, regeneration apres generation/remplacement de plan, route dediee, tests repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart valides.
 - Fonctionnalite active : aucune.
-- Prochaine fonctionnalite autorisee : Liste de courses.
+- Prochaine fonctionnalite autorisee : Profil et preferences.
 
 ## Erreurs importantes rencontrees
 
@@ -79,6 +79,9 @@ Pour chaque fonctionnalite :
 | 2026-06-07 | Generation plan IA 7 jours | `widget_test.dart` attendait encore le repas statique `Toast avocat et oeuf` apres suppression du fallback repas | Test global mis a jour avec un `MealPlan` IA local de 7 jours ; `flutter test` relance avec succes. |
 | 2026-06-07 | Generation plan IA 7 jours | MCP Flutter / DTD connecte mais aucune app Flutter active disponible | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files`. |
 | 2026-06-07 | Remplacement repas | MCP Flutter / DTD non connecte pendant la verification widget live | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files`. |
+| 2026-06-07 | Remplacement repas | Clic simulateur sur `Remplacer` : alternative IA refusee quand l'IA renvoyait un nouvel id | Repository corrige pour conserver l'id local du repas remplace tout en validant que le type ne change pas ; regression testee avec `flutter test test/repositories_test.dart`, puis `flutter test` et `flutter analyze`. |
+| 2026-06-07 | Remplacement repas | Clic simulateur sur `Remplacer` depuis le detail : `Repas introuvable dans le plan actif.` | ViewModel corrige pour transmettre le repas affiche au repository ; repository corrige pour remplacer le repas du jour de meme type si l'id affiche n'est plus dans le plan local ; regression testee avec tests ciblés, `flutter analyze` et `flutter test`. |
+| 2026-06-07 | Liste de courses | MCP Flutter / DTD non connecte pendant la verification widget live | Absence documentee dans le fichier de fonctionnalite ; validation realisee avec tests widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files`. |
 
 ## Historique de validation
 
@@ -94,3 +97,4 @@ Pour chaque fonctionnalite :
 | 2026-06-06 | Proxy Firebase OpenAI | Terminee | Firebase Functions TypeScript v2 avec `generateMealPlan` et `replaceMeal`, validation entree/sortie, secret `OPENAI_API_KEY`, client OpenAI Responses Structured Outputs, service Flutter `AiProxyService`, tests Functions/service, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
 | 2026-06-07 | Generation plan IA 7 jours | Terminee | Modele `MealPlan`/`MealPlanDay`, parsing plan IA 7 jours, stockage local du plan complet, repository sans fallback statique repas, ecran generation connecte au proxy, retry erreur, regeneration depuis dashboard, tests complets, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
 | 2026-06-07 | Remplacement repas | Terminee | `MealPlan.replaceMeal`, repository branche sur `AiProxyService.replaceMeal`, profil et plan local requis, validation id/type de l'alternative, sauvegarde du plan modifie, boutons dashboard/detail avec loading et SnackBar, tests modele/repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |
+| 2026-06-07 | Liste de courses | Terminee | `ShoppingListRepository` genere les courses depuis les ingredients du plan actif, conserve les cases cochees compatibles, regenere apres generation/remplacement de plan, ecran dedie `/shopping-list`, navigation dashboard, tests repository/ViewModel/widget, `flutter test`, `flutter analyze` et MCP Dart `analyze_files` valides. |

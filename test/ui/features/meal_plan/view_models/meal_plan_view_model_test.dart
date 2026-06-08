@@ -250,7 +250,7 @@ class _ReplacingMealPlanRepository extends _TrackingMealPlanRepository {
   final Completer<MealPlan>? _replacementCompleter;
 
   @override
-  Future<MealPlan> replaceMeal(String mealId) async {
+  Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
     return _replacementCompleter?.future ?? _replacementPlan;
   }
 }
@@ -260,7 +260,7 @@ class _ThrowingReplacementMealPlanRepository
   _ThrowingReplacementMealPlanRepository({required super.localDataStore});
 
   @override
-  Future<MealPlan> replaceMeal(String mealId) async {
+  Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
     throw const MealPlanReplacementException('Alternative IA indisponible.');
   }
 }

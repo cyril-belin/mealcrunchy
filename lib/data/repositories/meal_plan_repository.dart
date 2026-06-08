@@ -1,5 +1,6 @@
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/data/repositories/shopping_list_repository.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
@@ -9,11 +10,13 @@ class MealPlanRepository {
   MealPlanRepository({
     required this.aiProxyService,
     required this.localDataStore,
+    this.shoppingListRepository,
     DateTime Function()? now,
   }) : _now = now ?? DateTime.now;
 
   final AiProxyService aiProxyService;
   final LocalDataStore localDataStore;
+  final ShoppingListRepository? shoppingListRepository;
   final DateTime Function() _now;
 
   Future<MealPlan> generateActiveMealPlan(UserProfile profile) async {
@@ -21,6 +24,7 @@ class MealPlanRepository {
     final planJson = _asJsonMap(payload['plan']);
     final plan = MealPlan.fromAiJson(planJson, generatedAt: _now());
     await localDataStore.saveActiveMealPlan(plan);
+    await shoppingListRepository?.regenerateFromActivePlan();
     return plan;
   }
 
@@ -46,7 +50,7 @@ class MealPlanRepository {
     );
   }
 
-  Future<MealPlan> replaceMeal(String mealId) async {
+  Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
     final localPlan = await _loadLocalMealPlan();
     if (localPlan == null) {
       throw const MealPlanUnavailableException(
@@ -61,32 +65,45 @@ class MealPlanRepository {
       );
     }
 
-    final currentMeal = _findMeal(localPlan, mealId);
-    if (currentMeal == null) {
+    final displayedMeal = currentMeal;
+    final storedMeal =
+        _findMeal(localPlan, mealId) ??
+        (displayedMeal == null
+            ? null
+            : _findMealByType(
+                localPlan.dayFor(_now()).meals,
+                displayedMeal.type,
+              ));
+    if (storedMeal == null) {
       throw const MealPlanReplacementException(
         'Repas introuvable dans le plan actif.',
       );
     }
+    final mealForPrompt = displayedMeal ?? storedMeal;
 
     final payload = await aiProxyService.replaceMeal(
       profile: profile,
-      currentMeal: currentMeal,
+      currentMeal: mealForPrompt,
       planContext: {
         'plan': localPlan.toJson(),
         'currentDay': localPlan.dayFor(_now()).toJson(),
       },
     );
-    final replacement = Meal.fromJson(_asJsonMap(payload['meal']));
+    final replacementJson = _asJsonMap(payload['meal']);
 
-    if (replacement.id != currentMeal.id ||
-        replacement.type != currentMeal.type) {
+    if (replacementJson['type'] != storedMeal.type) {
       throw const MealPlanReplacementException(
         'Alternative IA invalide pour ce repas.',
       );
     }
 
+    final replacement = Meal.fromJson({
+      ...replacementJson,
+      'id': storedMeal.id,
+    });
     final updatedPlan = localPlan.replaceMeal(replacement);
     await localDataStore.saveActiveMealPlan(updatedPlan);
+    await shoppingListRepository?.regenerateFromActivePlan();
     return updatedPlan;
   }
 
@@ -112,6 +129,16 @@ class MealPlanRepository {
         if (meal.id == mealId) {
           return meal;
         }
+      }
+    }
+
+    return null;
+  }
+
+  Meal? _findMealByType(List<Meal> meals, String type) {
+    for (final meal in meals) {
+      if (meal.type == type) {
+        return meal;
       }
     }
 
