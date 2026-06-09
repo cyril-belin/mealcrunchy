@@ -32,6 +32,8 @@ MealCrunchy est une application Flutter multiplateforme qui accompagne l'utilisa
 
 ## Fonctionnalites
 
+Documentation complète : [docs/README.md](docs/README.md)
+
 | Domaine | Description | Statut |
 |---|---|:---:|
 | Authentification | Inscription et connexion email/password via Firebase Auth, route guards | Done |
