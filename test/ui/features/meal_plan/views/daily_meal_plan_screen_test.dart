@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mealcrunchy/data/repositories/auth_repository.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
+import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
+import 'package:mealcrunchy/l10n/app_localizations.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
+import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/views/daily_meal_plan_screen.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/views/meal_details_screen.dart';
@@ -31,6 +36,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Aujourd\'hui, 6 juin'), findsOneWidget);
+    expect(find.text('Repas prévus'), findsOneWidget);
+    expect(find.text('Répartition des macros'), findsOneWidget);
     expect(
       find.byKey(const ValueKey('meal-consumed-checkbox-breakfast')),
       findsOneWidget,
@@ -45,6 +52,38 @@ void main() {
 
     expect(find.text('400 / 2000 kcal'), findsOneWidget);
     expect(find.text('20%'), findsOneWidget);
+  });
+
+  testWidgets('dashboard derives account initials and shows generation quota', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _DashboardAuthTestApp(
+        account: const AuthAccount(
+          uid: 'user-1',
+          email: 'alex@example.com',
+          displayName: 'Alex Rivers',
+        ),
+        viewModel: MealPlanViewModel(
+          mealPlanRepository: _DashboardMealPlanRepository(
+            generationUsage: const AiQuotaUsage(
+              periodKey: '2026-06',
+              limit: 1,
+              used: 1,
+              remaining: 0,
+            ),
+          ),
+          now: () => DateTime(2026, 6, 6),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('AR'), findsOneWidget);
+    expect(
+      find.text('Il vous reste 0 régénération ce mois-ci.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('dashboard and detail show the same meal values', (tester) async {
@@ -74,6 +113,33 @@ void main() {
     expect(find.text('19g'), findsOneWidget);
   });
 
+  testWidgets('meal cards push detail so system back returns to dashboard', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _DashboardRouterTestApp(
+        viewModel: MealPlanViewModel(
+          mealPlanRepository: _CoherenceMealPlanRepository(),
+          now: () => DateTime(2026, 6, 6),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byKey(const ValueKey('meal-card-coherence-breakfast')),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Repas coherence'), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Repas prévus'), findsOneWidget);
+    expect(find.text('43g'), findsNothing);
+  });
+
   testWidgets('replace action updates one meal from the dashboard', (
     tester,
   ) async {
@@ -95,7 +161,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Breakfast remplace'), findsOneWidget);
-    expect(find.text('Repas remplacé.'), findsOneWidget);
+    expect(
+      find.text('Repas remplacé. Il vous reste 6 remplacements ce mois-ci.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('regenerate button navigates to the generation screen', (
@@ -156,7 +225,11 @@ class _DashboardTestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider<MealPlanViewModel>.value(
       value: viewModel,
-      child: const MaterialApp(home: DailyMealPlanScreen()),
+      child: const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: DailyMealPlanScreen(),
+      ),
     );
   }
 }
@@ -202,7 +275,40 @@ class _DashboardRouterTestApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'MealCrunchy',
         theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
+      ),
+    );
+  }
+}
+
+class _DashboardAuthTestApp extends StatelessWidget {
+  const _DashboardAuthTestApp({required this.viewModel, required this.account});
+
+  final MealPlanViewModel viewModel;
+  final AuthAccount account;
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AuthViewModel>(
+          create: (_) => AuthViewModel(
+            authRepository: AuthRepository(
+              service: _StaticAuthService(account),
+            ),
+            localDataStore: _MemoryLocalDataStore(),
+          ),
+        ),
+        ChangeNotifierProvider<MealPlanViewModel>.value(value: viewModel),
+      ],
+      child: MaterialApp(
+        title: 'MealCrunchy',
+        theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const DailyMealPlanScreen(),
       ),
     );
   }
@@ -273,11 +379,13 @@ final _replacementPlan = MealPlan(
 );
 
 class _DashboardMealPlanRepository extends MealPlanRepository {
-  _DashboardMealPlanRepository()
+  _DashboardMealPlanRepository({AiQuotaUsage? generationUsage})
     : super(
         aiProxyService: _UnusedAiProxyService(),
         localDataStore: _MemoryLocalDataStore(),
-      );
+      ) {
+    lastPlanGenerationUsage = generationUsage;
+  }
 
   @override
   Future<List<Meal>> getDailyMeals() async => const [_breakfast];
@@ -304,6 +412,12 @@ class _ReplacingDashboardMealPlanRepository
     extends _DashboardMealPlanRepository {
   @override
   Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
+    lastMealReplacementUsage = const AiQuotaUsage(
+      periodKey: '2026-06',
+      limit: 10,
+      used: 4,
+      remaining: 6,
+    );
     return _replacementPlan;
   }
 }
@@ -317,6 +431,39 @@ class _UnusedAiCallableClient implements AiCallableClient {
   Future<Object?> call(String name, Map<String, Object?> data) {
     throw UnimplementedError();
   }
+}
+
+class _StaticAuthService implements AuthService {
+  const _StaticAuthService(this.account);
+
+  final AuthAccount account;
+
+  @override
+  AuthAccount? get currentAccount => account;
+
+  @override
+  Stream<AuthAccount?> authStateChanges() =>
+      Stream<AuthAccount?>.value(account);
+
+  @override
+  Future<AuthAccount> signIn({
+    required String email,
+    required String password,
+  }) async {
+    return account;
+  }
+
+  @override
+  Future<AuthAccount> signUp({
+    required String email,
+    required String password,
+    required String displayName,
+  }) async {
+    return account;
+  }
+
+  @override
+  Future<void> signOut() async {}
 }
 
 class _MemoryLocalDataStore implements LocalDataStore {

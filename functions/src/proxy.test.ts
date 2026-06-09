@@ -7,6 +7,7 @@ import {
   type AiQuotaDependencies,
   type AiProxyDependencies,
 } from "./proxy";
+import { AiQuotaExhaustedError } from "./quotas";
 
 const profile = {
   goal: "Perdre du poids",
@@ -89,6 +90,7 @@ test("generateMealPlan maps OpenAI quota errors", async () => {
     errorWithCode("resource-exhausted"),
   );
   assert.equal(quotaStore.mealPlanGenerationsUsed, 0);
+  assert.equal(quotaStore.releasedMealPlanGenerations, 1);
 });
 
 test("generateMealPlan refuses invalid OpenAI payloads", async () => {
@@ -103,12 +105,17 @@ test("generateMealPlan refuses invalid OpenAI payloads", async () => {
     errorWithCode("internal"),
   );
   assert.equal(quotaStore.mealPlanGenerationsUsed, 0);
+  assert.equal(quotaStore.releasedMealPlanGenerations, 1);
 });
 
 test("generateMealPlan returns a validated plan", async () => {
+  const dependencies = fakeDependencies({ plan });
+  const quotaStore = new FakeAiQuotaStore({
+    openAiGenerateCalls: () => dependencies.generateMealPlanCalls,
+  });
   const handler = buildGenerateMealPlanHandler(
-    fakeDependencies({ plan }),
-    quotaDependencies(),
+    dependencies,
+    quotaDependencies(quotaStore),
   );
 
   const result = await handler({
@@ -123,6 +130,8 @@ test("generateMealPlan returns a validated plan", async () => {
     remaining: 0,
   });
   assert.equal(result.plan.days[0]?.meals[0]?.name, "Omelette aux herbes");
+  assert.equal(quotaStore.reservedMealPlanGenerations, 1);
+  assert.equal(quotaStore.generateMealPlanCallsAtFirstReservation, 0);
 });
 
 test("generateMealPlan refuses exhausted app quotas before OpenAI", async () => {
@@ -137,6 +146,30 @@ test("generateMealPlan refuses exhausted app quotas before OpenAI", async () => 
     errorWithCode("resource-exhausted"),
   );
   assert.equal(dependencies.generateMealPlanCalls, 0);
+});
+
+test("replaceMeal releases reserved quota when OpenAI fails", async () => {
+  const quotaStore = new FakeAiQuotaStore();
+  const handler = buildReplaceMealHandler(
+    fakeDependencies({ replaceError: { status: 400, message: "invalid" } }),
+    quotaDependencies(quotaStore),
+  );
+
+  await assert.rejects(
+    () =>
+      handler({
+        auth: { uid: "user-1" },
+        data: {
+          profile,
+          currentMeal: meal,
+          planContext: { meals: [meal] },
+          locale: "fr-FR",
+        },
+      }),
+    errorWithCode("invalid-argument"),
+  );
+  assert.equal(quotaStore.mealReplacementsUsed, 0);
+  assert.equal(quotaStore.releasedMealReplacements, 1);
 });
 
 test("replaceMeal returns a validated alternative meal", async () => {
@@ -233,13 +266,21 @@ class FakeAiQuotaStore {
   constructor(options: {
     mealPlanGenerationsUsed?: number;
     mealReplacementsUsed?: number;
+    openAiGenerateCalls?: () => number;
   } = {}) {
     this.mealPlanGenerationsUsed = options.mealPlanGenerationsUsed ?? 0;
     this.mealReplacementsUsed = options.mealReplacementsUsed ?? 0;
+    this.openAiGenerateCalls = options.openAiGenerateCalls ?? (() => 0);
   }
 
   mealPlanGenerationsUsed: number;
   mealReplacementsUsed: number;
+  private readonly openAiGenerateCalls: () => number;
+  reservedMealPlanGenerations = 0;
+  reservedMealReplacements = 0;
+  releasedMealPlanGenerations = 0;
+  releasedMealReplacements = 0;
+  generateMealPlanCallsAtFirstReservation: number | null = null;
 
   async getUsage(input: {
     kind: "mealPlanGeneration" | "mealReplacement";
@@ -249,17 +290,55 @@ class FakeAiQuotaStore {
     return this.usage(input);
   }
 
-  async incrementUsage(input: {
+  async reserveUsage(input: {
+    kind: "mealPlanGeneration" | "mealReplacement";
+    periodKey: string;
+    limit: number;
+  }) {
+    const used =
+      input.kind === "mealPlanGeneration"
+        ? this.mealPlanGenerationsUsed
+        : this.mealReplacementsUsed;
+    if (used >= input.limit) {
+      throw new AiQuotaExhaustedError();
+    }
+
+    if (input.kind === "mealPlanGeneration") {
+      this.reservedMealPlanGenerations += 1;
+      this.generateMealPlanCallsAtFirstReservation ??=
+        this.openAiGenerateCalls();
+      this.mealPlanGenerationsUsed += 1;
+    } else {
+      this.reservedMealReplacements += 1;
+      this.mealReplacementsUsed += 1;
+    }
+    return this.usage(input);
+  }
+
+  async releaseUsage(input: {
     kind: "mealPlanGeneration" | "mealReplacement";
     periodKey: string;
     limit: number;
   }) {
     if (input.kind === "mealPlanGeneration") {
-      this.mealPlanGenerationsUsed += 1;
+      this.releasedMealPlanGenerations += 1;
+      this.mealPlanGenerationsUsed = Math.max(
+        this.mealPlanGenerationsUsed - 1,
+        0,
+      );
     } else {
-      this.mealReplacementsUsed += 1;
+      this.releasedMealReplacements += 1;
+      this.mealReplacementsUsed = Math.max(this.mealReplacementsUsed - 1, 0);
     }
     return this.usage(input);
+  }
+
+  async incrementUsage(input: {
+    kind: "mealPlanGeneration" | "mealReplacement";
+    periodKey: string;
+    limit: number;
+  }) {
+    return this.reserveUsage(input);
   }
 
   private usage(input: {

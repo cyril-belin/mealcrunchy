@@ -18,9 +18,19 @@ class MealPlanRepository {
   final LocalDataStore localDataStore;
   final ShoppingListRepository? shoppingListRepository;
   final DateTime Function() _now;
+  AiQuotaUsage? lastPlanGenerationUsage;
+  AiQuotaUsage? lastMealReplacementUsage;
+
+  Future<MealPlanGenerationResult> generateActiveMealPlanWithUsage(
+    UserProfile profile,
+  ) async {
+    final plan = await generateActiveMealPlan(profile);
+    return MealPlanGenerationResult(plan: plan, usage: lastPlanGenerationUsage);
+  }
 
   Future<MealPlan> generateActiveMealPlan(UserProfile profile) async {
     final payload = await aiProxyService.generateMealPlan(profile: profile);
+    lastPlanGenerationUsage = AiQuotaUsage.maybeFromJson(payload['usage']);
     final planJson = _asJsonMap(payload['plan']);
     final plan = MealPlan.fromAiJson(planJson, generatedAt: _now());
     await localDataStore.saveActiveMealPlan(plan);
@@ -30,34 +40,27 @@ class MealPlanRepository {
   }
 
   Future<List<Meal>> getDailyMeals() async {
-    final localPlan = await _loadLocalMealPlan();
-    if (localPlan != null) {
-      return localPlan.dayFor(_now()).meals;
-    }
-
-    throw const MealPlanUnavailableException(
-      'Aucun plan IA actif. Générez un plan pour continuer.',
-    );
+    final localPlan = await _loadRequiredLocalMealPlan();
+    return (await _currentDayFor(localPlan)).meals;
   }
 
   Future<NutritionSummary> getNutritionSummary() async {
-    final localPlan = await _loadLocalMealPlan();
-    if (localPlan != null) {
-      return localPlan.summary;
-    }
-
-    throw const MealPlanUnavailableException(
-      'Aucun plan IA actif. Générez un plan pour continuer.',
-    );
+    final localPlan = await _loadRequiredLocalMealPlan();
+    await _currentDayFor(localPlan);
+    return localPlan.summary;
   }
 
   Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
-    final localPlan = await _loadLocalMealPlan();
-    if (localPlan == null) {
-      throw const MealPlanUnavailableException(
-        'Aucun plan IA actif. Générez un plan pour continuer.',
-      );
-    }
+    final result = await replaceMealWithUsage(mealId, currentMeal: currentMeal);
+    return result.plan;
+  }
+
+  Future<MealReplacementResult> replaceMealWithUsage(
+    String mealId, {
+    Meal? currentMeal,
+  }) async {
+    final localPlan = await _loadRequiredLocalMealPlan();
+    final currentDay = await _currentDayFor(localPlan);
 
     final profile = await localDataStore.loadUserProfile();
     if (profile == null) {
@@ -71,10 +74,7 @@ class MealPlanRepository {
         _findMeal(localPlan, mealId) ??
         (displayedMeal == null
             ? null
-            : _findMealByType(
-                localPlan.dayFor(_now()).meals,
-                displayedMeal.type,
-              ));
+            : _findMealByType(currentDay.meals, displayedMeal.type));
     if (storedMeal == null) {
       throw const MealPlanReplacementException(
         'Repas introuvable dans le plan actif.',
@@ -87,9 +87,10 @@ class MealPlanRepository {
       currentMeal: mealForPrompt,
       planContext: {
         'plan': localPlan.toJson(),
-        'currentDay': localPlan.dayFor(_now()).toJson(),
+        'currentDay': currentDay.toJson(),
       },
     );
+    lastMealReplacementUsage = AiQuotaUsage.maybeFromJson(payload['usage']);
     final replacementJson = _asJsonMap(payload['meal']);
 
     if (replacementJson['type'] != storedMeal.type) {
@@ -105,7 +106,10 @@ class MealPlanRepository {
     final updatedPlan = localPlan.replaceMeal(replacement);
     await localDataStore.saveActiveMealPlan(updatedPlan);
     await shoppingListRepository?.regenerateFromActivePlan();
-    return updatedPlan;
+    return MealReplacementResult(
+      plan: updatedPlan,
+      usage: lastMealReplacementUsage,
+    );
   }
 
   Future<Set<String>> getConsumedMealIds(String dayKey) async {
@@ -121,6 +125,32 @@ class MealPlanRepository {
       return localDataStore.loadActiveMealPlan();
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<MealPlan> _loadRequiredLocalMealPlan() async {
+    final localPlan = await _loadLocalMealPlan();
+    if (localPlan == null) {
+      throw const MealPlanUnavailableException(
+        'Aucun plan IA actif. Générez un plan pour continuer.',
+      );
+    }
+
+    return localPlan;
+  }
+
+  Future<MealPlanDay> _currentDayFor(MealPlan plan) async {
+    try {
+      return plan.dayFor(_now());
+    } on RangeError {
+      try {
+        await localDataStore.saveProfileNeedsPlanRegeneration(true);
+      } catch (_) {
+        // Loading should still fail with the actionable expired-plan message.
+      }
+      throw const MealPlanUnavailableException(
+        'Votre plan IA a expiré. Régénérez un plan pour continuer.',
+      );
     }
   }
 
@@ -160,6 +190,20 @@ class MealPlanRepository {
       message: 'Réponse IA invalide.',
     );
   }
+}
+
+class MealPlanGenerationResult {
+  const MealPlanGenerationResult({required this.plan, required this.usage});
+
+  final MealPlan plan;
+  final AiQuotaUsage? usage;
+}
+
+class MealReplacementResult {
+  const MealReplacementResult({required this.plan, required this.usage});
+
+  final MealPlan plan;
+  final AiQuotaUsage? usage;
 }
 
 class MealPlanReplacementException implements Exception {

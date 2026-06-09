@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
+import 'package:mealcrunchy/l10n/app_localizations.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
+import 'package:mealcrunchy/ui/core/state/ai_quota_messages.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 import 'package:mealcrunchy/ui/core/theme/app_colors.dart';
 import 'package:mealcrunchy/ui/core/widgets/app_scaffold.dart';
@@ -17,6 +19,7 @@ class MealDetailsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<MealPlanViewModel>();
+    final l10n = AppLocalizations.of(context);
     final mealsState = viewModel.mealsState;
 
     return switch (mealsState) {
@@ -36,7 +39,13 @@ class MealDetailsScreen extends StatelessWidget {
         isReplacing: viewModel.replacingMealId == mealId,
         onReplaceMeal: () async {
           final success = await viewModel.replaceMeal(mealId);
-          return success ? null : viewModel.replacementErrorMessage;
+          return success
+              ? remainingReplacementsMessage(
+                  l10n,
+                  viewModel.mealReplacementUsage,
+                  includeSuccessPrefix: true,
+                )
+              : viewModel.replacementErrorMessage;
         },
       ),
     };
@@ -56,6 +65,7 @@ class _MealDetailsContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final meal = this.meal;
     if (meal == null) {
       return _MealStateScaffold(
@@ -202,7 +212,7 @@ class _MealDetailsContent extends StatelessWidget {
                             ..showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  errorMessage ?? 'Repas remplacé.',
+                                  errorMessage ?? l10n.mealReplaced,
                                 ),
                               ),
                             );

@@ -29,9 +29,11 @@ class FirebaseAiCallableClient implements AiCallableClient {
 }
 
 class AiProxyService {
-  AiProxyService({this.client});
+  AiProxyService({AiCallableClient? client}) {
+    _client = client;
+  }
 
-  final AiCallableClient? client;
+  AiCallableClient? _client;
 
   Future<Map<String, Object?>> generateMealPlan({
     required UserProfile profile,
@@ -69,8 +71,7 @@ class AiProxyService {
     required Map<String, Object?> data,
   }) async {
     try {
-      final callableClient = client ?? FirebaseAiCallableClient();
-      final payload = await callableClient.call(name, data);
+      final payload = await _callableClient.call(name, data);
       final json = _asJsonMap(payload);
       if (json == null || json[requiredKey] is! Map) {
         throw const AiProxyException(
@@ -85,6 +86,10 @@ class AiProxyService {
         message: _messageForCode(error.code),
       );
     }
+  }
+
+  AiCallableClient get _callableClient {
+    return _client ??= FirebaseAiCallableClient();
   }
 
   Map<String, Object?>? _asJsonMap(Object? value) {
@@ -132,4 +137,45 @@ class AiProxyException implements Exception {
 
   @override
   String toString() => message;
+}
+
+class AiQuotaUsage {
+  const AiQuotaUsage({
+    required this.periodKey,
+    required this.limit,
+    required this.used,
+    required this.remaining,
+  });
+
+  final String periodKey;
+  final int limit;
+  final int used;
+  final int remaining;
+
+  static AiQuotaUsage? maybeFromJson(Object? value) {
+    if (value is! Map) {
+      return null;
+    }
+
+    final json = value.cast<String, Object?>();
+    final periodKey = json['periodKey'];
+    final limit = json['limit'];
+    final used = json['used'];
+    final remaining = json['remaining'];
+
+    if (periodKey is! String ||
+        periodKey.isEmpty ||
+        limit is! int ||
+        used is! int ||
+        remaining is! int) {
+      return null;
+    }
+
+    return AiQuotaUsage(
+      periodKey: periodKey,
+      limit: limit,
+      used: used,
+      remaining: remaining,
+    );
+  }
 }

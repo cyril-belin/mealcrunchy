@@ -43,6 +43,18 @@ void main() {
       expect(reloaded.summary.carbsPercent, 43);
     });
 
+    test('rejects dates after the 7 day plan window', () {
+      final plan = MealPlan.fromAiJson(
+        _planJson(days: 7),
+        generatedAt: DateTime.utc(2026, 6, 7),
+      );
+
+      expect(
+        () => plan.dayFor(DateTime.utc(2026, 6, 14)),
+        throwsA(isA<RangeError>()),
+      );
+    });
+
     test('replaces only the matching meal in the active plan', () {
       final plan = MealPlan.fromAiJson(
         _planJson(days: 7),

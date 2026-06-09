@@ -15,7 +15,15 @@ void main() {
   group('MealPlanRepository', () {
     test('generates and saves an active 7 day AI meal plan', () async {
       final aiProxyService = _FakeAiProxyService(
-        response: {'plan': _planJson(days: 7)},
+        response: {
+          'plan': _planJson(days: 7),
+          'usage': _usageJson(
+            periodKey: '2026-06',
+            limit: 1,
+            used: 1,
+            remaining: 0,
+          ),
+        },
       );
       final localDataStore = _FakeLocalDataStore();
       final repository = MealPlanRepository(
@@ -30,6 +38,8 @@ void main() {
       expect(localDataStore.activeMealPlan?.days, hasLength(7));
       expect(localDataStore.profileNeedsPlanRegeneration, isFalse);
       expect(aiProxyService.requestedProfile, _profile);
+      expect(repository.lastPlanGenerationUsage?.periodKey, '2026-06');
+      expect(repository.lastPlanGenerationUsage?.remaining, 0);
     });
 
     test('does not save a plan when AI generation fails', () async {
@@ -87,6 +97,32 @@ void main() {
       expect(summary.targetCalories, 2100);
     });
 
+    test('marks expired local plans as needing regeneration', () async {
+      final localDataStore = _FakeLocalDataStore(
+        activeMealPlan: MealPlan.fromAiJson(
+          _planJson(days: 7),
+          generatedAt: DateTime.utc(2026, 6, 7),
+        ),
+      )..profileNeedsPlanRegeneration = false;
+      final repository = MealPlanRepository(
+        aiProxyService: _FakeAiProxyService(),
+        localDataStore: localDataStore,
+        now: () => DateTime.utc(2026, 6, 14),
+      );
+
+      await expectLater(
+        repository.getDailyMeals(),
+        throwsA(
+          isA<MealPlanUnavailableException>().having(
+            (error) => error.message,
+            'message',
+            'Votre plan IA a expiré. Régénérez un plan pour continuer.',
+          ),
+        ),
+      );
+      expect(localDataStore.profileNeedsPlanRegeneration, isTrue);
+    });
+
     test(
       'replaces one meal and preserves the rest of the local plan',
       () async {
@@ -103,6 +139,12 @@ void main() {
               id: 'day-2-lunch',
               type: 'DEJEUNER',
               name: 'Bowl remplace',
+            ),
+            'usage': _usageJson(
+              periodKey: '2026-06',
+              limit: 10,
+              used: 4,
+              remaining: 6,
             ),
           },
         );
@@ -127,6 +169,8 @@ void main() {
           aiProxyService.requestedPlanContext?['plan'],
           isA<Map<String, Object?>>(),
         );
+        expect(repository.lastMealReplacementUsage?.periodKey, '2026-06');
+        expect(repository.lastMealReplacementUsage?.remaining, 6);
       },
     );
 
@@ -346,6 +390,20 @@ Map<String, Object?> _mealJson({
     'duration': '20 min',
     'ingredients': ingredients ?? ['Ingredient'],
     'instructions': ['Instruction'],
+  };
+}
+
+Map<String, Object?> _usageJson({
+  required String periodKey,
+  required int limit,
+  required int used,
+  required int remaining,
+}) {
+  return {
+    'periodKey': periodKey,
+    'limit': limit,
+    'used': used,
+    'remaining': remaining,
   };
 }
 

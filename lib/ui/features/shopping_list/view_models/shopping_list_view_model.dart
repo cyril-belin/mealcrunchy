@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:mealcrunchy/data/repositories/shopping_list_repository.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
+import 'package:mealcrunchy/ui/core/state/view_error_message.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 
 class ShoppingListViewModel extends ChangeNotifier {
@@ -19,8 +20,10 @@ class ShoppingListViewModel extends ChangeNotifier {
     try {
       final items = await shoppingListRepository.getShoppingList();
       itemsState = ViewData(items);
-    } catch (error) {
-      itemsState = ViewError(error.toString());
+    } on ShoppingListUnavailableException catch (error) {
+      itemsState = ViewError(error.message);
+    } catch (_) {
+      itemsState = const ViewError(unexpectedViewErrorMessage);
     }
 
     notifyListeners();

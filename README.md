@@ -8,7 +8,7 @@
 [![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Functions-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-Structured%20Outputs-412991?logo=openai&logoColor=white)](https://platform.openai.com)
-[![Tests](https://img.shields.io/badge/tests-105%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-147%20passing-brightgreen)]()
 
 </div>
 
@@ -42,8 +42,13 @@ MealCrunchy est une application Flutter multiplateforme qui accompagne l'utilisa
 | Detail repas | Fiche complete : type, duree, calories, macros, ingredients, instructions | Done |
 | Generation plan IA | Plan repas 7 jours personnalise genere par le proxy OpenAI | Done |
 | Remplacement repas | Remplacer un repas par une alternative IA respectant le profil | Done |
-| Liste de courses | Liste d'ingredients generee depuis le plan actif, avec cases a cocher | Planned |
-| Profil et preferences | Consultation et modification du profil nutritionnel apres onboarding | Planned |
+| Liste de courses | Liste d'ingredients generee depuis le plan actif, avec cases a cocher | Done |
+| Profil et preferences | Consultation et modification du profil nutritionnel apres onboarding | Done |
+| Quotas IA | Quotas mensuels par utilisateur (transaction Firestore), affichage du restant | Done |
+| Securite | Firebase App Check (Play Integrity / App Attest / reCAPTCHA), regles Firestore deny-all | Done |
+| Observabilite | Crashlytics (crashs) et Analytics (events IA, navigation) derriere une abstraction injectable | Done |
+| Internationalisation | `flutter_localizations` + `intl`, formats de dates localises (fr-FR) | Done |
+| Theme | Material 3, themes clair et sombre suivant le systeme | Done |
 
 ## Architecture
 
@@ -60,6 +65,7 @@ MealCrunchy est une application Flutter multiplateforme qui accompagne l'utilisa
 ├─────────────────────────────────────────────────────────┤
 │                   Backend (serverless)                   │
 │  Firebase Cloud Functions (TypeScript)  →  OpenAI API   │
+│  App Check  ·  Quotas Firestore  ·  Secrets manager     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -68,18 +74,23 @@ MealCrunchy est une application Flutter multiplateforme qui accompagne l'utilisa
 - **GoRouter** pour la navigation declarative avec route guards et deep linking.
 - **LocalDataStore** abstrait (interface injectable) : persistance via `SharedPreferencesAsync`, facilement remplacable par un faux store en test.
 - **AiProxyService** isole le backend IA derriere une abstraction `AiCallableClient` injectable, zero couplage Firebase dans les tests.
+- **ObservabilityService** abstrait Crashlytics et Analytics : implementation `Firebase` en prod, `Noop` en test, aucun blocage de l'app si la telemetrie echoue.
+- **App Check** applique cote serveur (`enforceAppCheck`) et active cote client par plateforme, pour proteger les Functions IA couteuses contre l'abus.
 
 ## Stack technique
 
 | Categorie | Technologies |
 |---|---|
-| **Frontend** | Flutter 3.44 · Dart 3.12 · Provider · GoRouter · Material 3 |
+| **Frontend** | Flutter 3.44 · Dart 3.12 · Provider · GoRouter · Material 3 (clair/sombre) |
 | **Backend** | Firebase Cloud Functions v2 (TypeScript) · OpenAI Responses API |
-| **Auth** | Firebase Authentication (email/password) |
-| **Persistance** | SharedPreferences (profil, plan actif, suivi quotidien) |
+| **Auth & Securite** | Firebase Authentication (email/password) · App Check · regles Firestore deny-all |
+| **Quotas** | Transactions Firestore (Admin SDK) · quotas mensuels par utilisateur |
+| **Observabilite** | Firebase Crashlytics · Firebase Analytics |
+| **i18n** | `flutter_localizations` · `intl` (fr-FR) |
+| **Persistance** | SharedPreferences (profil, plan actif, suivi quotidien, liste de courses) |
 | **Design** | Plus Jakarta Sans · Design system tokens (couleurs, typographie, composants) |
-| **Tests** | `flutter_test` (99 tests) · Node.js `node:test` (6 tests Functions) |
-| **CI/Qualite** | `flutter analyze` · lint strict · revue de code systematique |
+| **Tests** | `flutter_test` (137 tests) · Node.js `node:test` (10 tests Functions) |
+| **CI/Qualite** | `flutter analyze` (0 issue) · lint strict · revue de code systematique |
 
 ## Demarrage rapide
 
@@ -110,13 +121,13 @@ flutter run
 ### Lancer les tests
 
 ```bash
-# Tests Flutter (99 tests)
+# Tests Flutter (137 tests)
 flutter test
 
-# Analyse statique
+# Analyse statique (0 issue)
 flutter analyze
 
-# Tests Firebase Functions (6 tests)
+# Tests Firebase Functions (10 tests)
 npm test --prefix functions
 ```
 
@@ -149,7 +160,8 @@ mealcrunchy/
 | `SharedPreferences` plutot que SQLite/Hive | Suffisant pour le MVP ; interface abstraite permettant de migrer sans casser l'existant |
 | Proxy Firebase plutot qu'appel direct OpenAI | Securite : la cle API ne quitte jamais le serveur ; validation stricte des reponses IA |
 | Structured Outputs (json_schema strict) | Garantit un format de reponse conforme cote IA, evite le parsing fragile |
-| Fallback sur donnees statiques | Le plan repas statique reste disponible tant que la generation IA n'est pas activee, zero regression |
+| App Check + quotas mensuels Firestore | Protege les Functions IA couteuses contre l'abus ; reservation avant appel, liberation en cas d'echec |
+| Observabilite derriere une abstraction | Crashlytics/Analytics injectables ; un echec de telemetrie ne bloque jamais l'experience |
 | `ChangeNotifier` + `Provider` | Simple, natif Flutter, suffisant pour l'echelle actuelle ; migration vers Riverpod possible sans refonte |
 
 ## Methodologie
@@ -167,11 +179,14 @@ Le projet suit un workflow **design-first** et **feature-by-feature** :
 
 - [x] Generation du plan repas 7 jours via le proxy IA
 - [x] Remplacement d'un repas individuel par une alternative IA
-- [ ] Liste de courses generee depuis le plan actif
-- [ ] Ecran profil et preferences modifiables
-- [ ] Gestion des quotas IA
-- [ ] Internationalisation (ARB / `flutter_localizations`)
+- [x] Liste de courses generee depuis le plan actif
+- [x] Ecran profil et preferences modifiables
+- [x] Gestion des quotas IA (quotas mensuels, transactions Firestore)
+- [x] Internationalisation (`flutter_localizations` / `intl`)
+- [x] Securite App Check et observabilite (Crashlytics / Analytics)
+- [x] Theme sombre (Material 3)
 - [ ] Amelioration de l'accessibilite (semantics, contrastes)
+- [ ] Persistance du choix de theme (clair / sombre / systeme)
 
 ## Auteur
 

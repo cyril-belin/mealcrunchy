@@ -127,4 +127,73 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData dark() {
+    final base = light();
+    const background = Color(0xFF101C17);
+    const secondaryBackground = Color(0xFF16251F);
+    const surface = Color(0xFF20352C);
+    const outline = Color(0xFF3F5D50);
+    const primaryText = Color(0xFFEAF5EF);
+    const secondaryText = Color(0xFFB8C9C0);
+    const primary = Color(0xFF74D3A2);
+
+    return base.copyWith(
+      scaffoldBackgroundColor: background,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary,
+        brightness: Brightness.dark,
+        primary: primary,
+        secondary: AppColors.secondary,
+        surface: secondaryBackground,
+        error: AppColors.error,
+      ),
+      textTheme: base.textTheme.apply(
+        bodyColor: primaryText,
+        displayColor: primaryText,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: secondaryBackground,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: outline),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: outline),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: primary, width: 1.5),
+        ),
+        labelStyle: const TextStyle(color: secondaryText),
+        hintStyle: const TextStyle(color: secondaryText),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primary,
+          foregroundColor: background,
+          minimumSize: const Size.fromHeight(56),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primary,
+          minimumSize: const Size.fromHeight(54),
+          side: const BorderSide(color: outline),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+          ),
+          textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+      ),
+      dividerColor: outline,
+      cardColor: surface,
+    );
+  }
 }

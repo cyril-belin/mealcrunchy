@@ -79,7 +79,17 @@ class MealPlan {
       generatedAt.day,
     );
     final current = DateTime.utc(date.year, date.month, date.day);
-    final offset = current.difference(start).inDays.clamp(0, days.length - 1);
+    final offset = current.difference(start).inDays;
+    if (offset < 0 || offset >= days.length) {
+      throw RangeError.range(
+        offset,
+        0,
+        days.length - 1,
+        'date',
+        'Date outside the meal plan window.',
+      );
+    }
+
     return days[offset];
   }
 

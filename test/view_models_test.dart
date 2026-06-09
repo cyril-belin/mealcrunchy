@@ -30,15 +30,60 @@ void main() {
       expect(viewModel.mealById('test-meal')?.name, 'Test meal');
     });
 
-    test('exposes error states when loading fails', () async {
+    test('exposes known loading errors as user messages', () async {
       final viewModel = MealPlanViewModel(
-        mealPlanRepository: _ThrowingMealPlanRepository(),
+        mealPlanRepository: _ThrowingMealPlanRepository(
+          exception: const MealPlanUnavailableException(
+            'Aucun plan IA actif. Générez un plan pour continuer.',
+          ),
+        ),
       );
 
       await Future<void>.delayed(Duration.zero);
 
-      expect(viewModel.mealsState, isA<ViewError<List<Meal>>>());
-      expect(viewModel.summaryState, isA<ViewError<NutritionSummary>>());
+      expect(
+        viewModel.mealsState,
+        isA<ViewError<List<Meal>>>().having(
+          (state) => state.message,
+          'message',
+          'Aucun plan IA actif. Générez un plan pour continuer.',
+        ),
+      );
+      expect(
+        viewModel.summaryState,
+        isA<ViewError<NutritionSummary>>().having(
+          (state) => state.message,
+          'message',
+          'Aucun plan IA actif. Générez un plan pour continuer.',
+        ),
+      );
+    });
+
+    test('hides unexpected loading errors behind a generic message', () async {
+      final viewModel = MealPlanViewModel(
+        mealPlanRepository: _ThrowingMealPlanRepository(
+          exception: StateError('debug loading failure'),
+        ),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        viewModel.mealsState,
+        isA<ViewError<List<Meal>>>().having(
+          (state) => state.message,
+          'message',
+          'Une erreur est survenue. Réessayez dans un instant.',
+        ),
+      );
+      expect(
+        viewModel.summaryState,
+        isA<ViewError<NutritionSummary>>().having(
+          (state) => state.message,
+          'message',
+          'Une erreur est survenue. Réessayez dans un instant.',
+        ),
+      );
     });
   });
 }
@@ -81,14 +126,16 @@ class _SuccessfulMealPlanRepository extends MealPlanRepository {
 }
 
 class _ThrowingMealPlanRepository extends MealPlanRepository {
-  _ThrowingMealPlanRepository()
+  _ThrowingMealPlanRepository({required this.exception})
     : super(
         aiProxyService: _UnusedAiProxyService(),
         localDataStore: _NoOpLocalDataStore(),
       );
 
+  final Object exception;
+
   @override
-  Future<List<Meal>> getDailyMeals() async => throw Exception('load failed');
+  Future<List<Meal>> getDailyMeals() async => throw exception;
 
   @override
   Future<NutritionSummary> getNutritionSummary() async => _summary;

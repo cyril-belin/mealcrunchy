@@ -102,19 +102,24 @@ export function buildGenerateMealPlanHandler(
     const profile = readProfile(data.profile);
     const days = readDays(data.days);
     const locale = readLocale(data.locale);
-    const quotaRequest = await assertQuotaAvailable(
+    const quotaRequest = quotaRequestFor(
       quotaDependencies,
       userId,
       "mealPlanGeneration",
     );
+    const usage = await reserveQuota(quotaDependencies, quotaRequest);
 
-    const payload = await callOpenAi(() =>
-      dependencies.generateMealPlan({ userId, profile, days, locale }),
-    );
-    const plan = readMealPlan(payload, days);
-    const usage = await incrementQuota(quotaDependencies, quotaRequest);
+    try {
+      const payload = await callOpenAi(() =>
+        dependencies.generateMealPlan({ userId, profile, days, locale }),
+      );
+      const plan = readMealPlan(payload, days);
 
-    return { plan, usage };
+      return { plan, usage };
+    } catch (error) {
+      await releaseQuota(quotaDependencies, quotaRequest);
+      throw error;
+    }
   };
 }
 
@@ -129,26 +134,31 @@ export function buildReplaceMealHandler(
     const currentMeal = readMeal(data.currentMeal);
     const planContext = asRecord(data.planContext);
     const locale = readLocale(data.locale);
-    const quotaRequest = await assertQuotaAvailable(
+    const quotaRequest = quotaRequestFor(
       quotaDependencies,
       userId,
       "mealReplacement",
     );
+    const usage = await reserveQuota(quotaDependencies, quotaRequest);
 
-    const payload = await callOpenAi(() =>
-      dependencies.replaceMeal({
-        userId,
-        profile,
-        currentMeal,
-        planContext,
-        locale,
-      }),
-    );
-    const output = asRecord(payload);
-    const meal = readMeal(output.meal ?? payload);
-    const usage = await incrementQuota(quotaDependencies, quotaRequest);
+    try {
+      const payload = await callOpenAi(() =>
+        dependencies.replaceMeal({
+          userId,
+          profile,
+          currentMeal,
+          planContext,
+          locale,
+        }),
+      );
+      const output = asRecord(payload);
+      const meal = readMeal(output.meal ?? payload);
 
-    return { meal, usage };
+      return { meal, usage };
+    } catch (error) {
+      await releaseQuota(quotaDependencies, quotaRequest);
+      throw error;
+    }
   };
 }
 
@@ -193,21 +203,6 @@ function mapOpenAiError(error: unknown): HttpsError {
   );
 }
 
-async function assertQuotaAvailable(
-  dependencies: AiQuotaDependencies,
-  userId: string,
-  kind: AiQuotaKind,
-): Promise<AiQuotaRequest> {
-  const quotaRequest = quotaRequestFor(dependencies, userId, kind);
-  const usage = await getQuotaUsage(dependencies, quotaRequest);
-
-  if (usage.remaining <= 0) {
-    throw quotaExceededError();
-  }
-
-  return quotaRequest;
-}
-
 function quotaRequestFor(
   dependencies: AiQuotaDependencies,
   userId: string,
@@ -222,23 +217,23 @@ function quotaRequestFor(
   };
 }
 
-async function getQuotaUsage(
+async function reserveQuota(
   dependencies: AiQuotaDependencies,
   request: AiQuotaRequest,
 ): Promise<AiQuotaUsage> {
   try {
-    return await dependencies.quotaStore.getUsage(request);
+    return await dependencies.quotaStore.reserveUsage(request);
   } catch (error) {
     throw mapQuotaError(error);
   }
 }
 
-async function incrementQuota(
+async function releaseQuota(
   dependencies: AiQuotaDependencies,
   request: AiQuotaRequest,
-): Promise<AiQuotaUsage> {
+): Promise<void> {
   try {
-    return await dependencies.quotaStore.incrementUsage(request);
+    await dependencies.quotaStore.releaseUsage(request);
   } catch (error) {
     throw mapQuotaError(error);
   }

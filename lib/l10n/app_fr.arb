@@ -1,0 +1,113 @@
+{
+  "@@locale": "fr",
+  "todayDateLabel": "Aujourd'hui, {date}",
+  "@todayDateLabel": {
+    "description": "Dashboard label for the current day.",
+    "placeholders": {
+      "date": {
+        "type": "String",
+        "example": "6 février"
+      }
+    }
+  },
+  "mealPlanTitle": "Votre plan IA",
+  "@mealPlanTitle": {
+    "description": "Dashboard title for the generated AI meal plan."
+  },
+  "dailyGoalTitle": "Objectif quotidien",
+  "@dailyGoalTitle": {
+    "description": "Title of the daily calorie objective card."
+  },
+  "plannedMealsTitle": "Repas prévus",
+  "@plannedMealsTitle": {
+    "description": "Section title for the meals scheduled for the day."
+  },
+  "aiOptimizedLabel": "Optimisé par IA",
+  "@aiOptimizedLabel": {
+    "description": "Small label indicating meals are optimized by AI."
+  },
+  "trackingSaveError": "Impossible d'enregistrer le suivi. Réessayez.",
+  "@trackingSaveError": {
+    "description": "SnackBar shown when saving meal tracking fails."
+  },
+  "mealReplaced": "Repas remplacé.",
+  "@mealReplaced": {
+    "description": "SnackBar shown after a meal replacement succeeds without quota information."
+  },
+  "replaceMealTooltip": "Remplacer",
+  "@replaceMealTooltip": {
+    "description": "Tooltip for the AI meal replacement button."
+  },
+  "macroDistributionTitle": "Répartition des macros",
+  "@macroDistributionTitle": {
+    "description": "Title of the protein/carbs/fat distribution card."
+  },
+  "macroDistributionSummary": "Protéines {proteinPercent}% - Glucides {carbsPercent}% - Lipides {fatPercent}%",
+  "@macroDistributionSummary": {
+    "description": "Summary of macro nutrient percentages.",
+    "placeholders": {
+      "proteinPercent": {
+        "type": "int",
+        "example": "30"
+      },
+      "carbsPercent": {
+        "type": "int",
+        "example": "45"
+      },
+      "fatPercent": {
+        "type": "int",
+        "example": "25"
+      }
+    }
+  },
+  "shoppingListButton": "Voir la liste de courses",
+  "@shoppingListButton": {
+    "description": "Button opening the shopping list screen."
+  },
+  "regeneratePlanButton": "Régénérer le plan IA",
+  "@regeneratePlanButton": {
+    "description": "Button starting AI meal plan regeneration."
+  },
+  "loadPlanErrorTitle": "Impossible de charger le plan.",
+  "@loadPlanErrorTitle": {
+    "description": "Title shown when the meal plan dashboard cannot load."
+  },
+  "generatePlanButton": "Générer un plan",
+  "@generatePlanButton": {
+    "description": "Button starting plan generation from an empty/error state."
+  },
+  "retryButton": "Réessayer",
+  "@retryButton": {
+    "description": "Generic retry button label."
+  },
+  "remainingRegenerations": "{count, plural, =0{Il vous reste 0 régénération ce mois-ci.} =1{Il vous reste 1 régénération ce mois-ci.} other{Il vous reste {count} régénérations ce mois-ci.}}",
+  "@remainingRegenerations": {
+    "description": "Monthly AI plan regeneration quota remaining.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "2"
+      }
+    }
+  },
+  "remainingReplacements": "{count, plural, =0{Il vous reste 0 remplacement ce mois-ci.} =1{Il vous reste 1 remplacement ce mois-ci.} other{Il vous reste {count} remplacements ce mois-ci.}}",
+  "@remainingReplacements": {
+    "description": "Monthly AI meal replacement quota remaining.",
+    "placeholders": {
+      "count": {
+        "type": "int",
+        "example": "6"
+      }
+    }
+  },
+  "mealReplacedWithQuota": "Repas remplacé. {quotaMessage}",
+  "@mealReplacedWithQuota": {
+    "description": "SnackBar shown after a meal replacement succeeds with quota information.",
+    "placeholders": {
+      "quotaMessage": {
+        "type": "String",
+        "example": "Il vous reste 6 remplacements ce mois-ci."
+      }
+    }
+  }
+}

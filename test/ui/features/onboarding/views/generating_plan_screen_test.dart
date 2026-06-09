@@ -33,7 +33,13 @@ void main() {
   });
 
   testWidgets('shows an error and retries generation', (tester) async {
-    final repository = _WidgetMealPlanRepository(failuresRemaining: 1);
+    final repository = _WidgetMealPlanRepository(
+      failuresRemaining: 1,
+      generationException: const AiProxyException(
+        code: 'unavailable',
+        message: 'Generation impossible',
+      ),
+    );
     await tester.pumpWidget(_app(repository: repository, profile: _profile));
     await tester.pumpAndSettle();
 

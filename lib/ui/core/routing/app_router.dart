@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
@@ -16,9 +17,11 @@ import 'package:mealcrunchy/ui/features/splash/views/splash_screen.dart';
 GoRouter createAppRouter({
   required AuthViewModel authViewModel,
   String initialLocation = AppRoutes.splash,
+  List<NavigatorObserver> observers = const <NavigatorObserver>[],
 }) {
   return GoRouter(
     initialLocation: initialLocation,
+    observers: observers,
     refreshListenable: authViewModel,
     redirect: (context, state) {
       final location = state.uri.path;

@@ -2,13 +2,17 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
+import 'package:mealcrunchy/l10n/app_localizations.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
+import 'package:mealcrunchy/ui/core/state/ai_quota_messages.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
 import 'package:mealcrunchy/ui/core/theme/app_colors.dart';
 import 'package:mealcrunchy/ui/core/widgets/app_scaffold.dart';
 import 'package:mealcrunchy/ui/core/widgets/design_primitives.dart';
+import 'package:mealcrunchy/ui/features/auth/view_models/auth_view_model.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
 import 'package:provider/provider.dart';
 
@@ -18,8 +22,11 @@ class DailyMealPlanScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<MealPlanViewModel>();
+    final authViewModel = context.watch<AuthViewModel?>();
+    final l10n = AppLocalizations.of(context);
     final mealsState = viewModel.mealsState;
     final summaryState = viewModel.summaryState;
+    final accountInitials = _accountInitials(authViewModel?.account);
 
     return switch ((mealsState, summaryState)) {
       (ViewLoading<List<Meal>>(), _) ||
@@ -40,16 +47,54 @@ class DailyMealPlanScreen extends StatelessWidget {
         _MealPlanContent(
           meals: meals,
           summary: summary,
-          dayLabel: viewModel.currentDayLabel,
+          dayLabel: l10n.todayDateLabel(viewModel.currentDayDateLabel),
           isMealConsumed: viewModel.isMealConsumed,
           onMealConsumedChanged: viewModel.setMealConsumed,
           replacingMealId: viewModel.replacingMealId,
+          accountInitials: accountInitials,
+          planGenerationQuotaMessage: remainingRegenerationsMessage(
+            l10n,
+            viewModel.planGenerationUsage,
+          ),
           onReplaceMeal: (mealId) async {
             final success = await viewModel.replaceMeal(mealId);
-            return success ? null : viewModel.replacementErrorMessage;
+            return success
+                ? remainingReplacementsMessage(
+                    l10n,
+                    viewModel.mealReplacementUsage,
+                    includeSuccessPrefix: true,
+                  )
+                : viewModel.replacementErrorMessage;
           },
         ),
     };
+  }
+
+  String _accountInitials(AuthAccount? account) {
+    final displayName = account?.displayName?.trim();
+    final source = displayName != null && displayName.isNotEmpty
+        ? displayName
+        : account?.email.split('@').first.trim();
+    final cleanedSource = source?.trim();
+    if (cleanedSource == null || cleanedSource.isEmpty) {
+      return 'MC';
+    }
+
+    final words = cleanedSource
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList(growable: false);
+    if (words.length >= 2) {
+      return '${words.first.characters.first}${words[1].characters.first}'
+          .toUpperCase();
+    }
+
+    final compact = cleanedSource.replaceAll(RegExp(r'[^A-Za-zÀ-ÿ0-9]'), '');
+    if (compact.isEmpty) {
+      return 'MC';
+    }
+
+    return compact.characters.take(2).toString().toUpperCase();
   }
 }
 
@@ -61,6 +106,8 @@ class _MealPlanContent extends StatelessWidget {
     required this.isMealConsumed,
     required this.onMealConsumedChanged,
     required this.replacingMealId,
+    required this.accountInitials,
+    required this.planGenerationQuotaMessage,
     required this.onReplaceMeal,
   });
 
@@ -71,10 +118,14 @@ class _MealPlanContent extends StatelessWidget {
   final Future<bool> Function(String mealId, {required bool consumed})
   onMealConsumedChanged;
   final String? replacingMealId;
+  final String accountInitials;
+  final String? planGenerationQuotaMessage;
   final Future<String?> Function(String mealId) onReplaceMeal;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AppScaffold(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -92,7 +143,7 @@ class _MealPlanContent extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Votre plan IA',
+                      l10n.mealPlanTitle,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.w800),
                     ),
@@ -101,9 +152,12 @@ class _MealPlanContent extends StatelessWidget {
               ),
               IconButton(
                 onPressed: () => context.go(AppRoutes.profile),
-                icon: const CircleAvatar(
+                icon: CircleAvatar(
                   backgroundColor: AppColors.primary,
-                  child: Text('JD', style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    accountInitials,
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
               ),
             ],
@@ -117,7 +171,7 @@ class _MealPlanContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Objectif quotidien',
+                        l10n.dailyGoalTitle,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.secondaryText,
                         ),
@@ -159,12 +213,12 @@ class _MealPlanContent extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'Repas prevus',
+                  l10n.plannedMealsTitle,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
               Text(
-                'Optimisé par IA',
+                l10n.aiOptimizedLabel,
                 style: Theme.of(
                   context,
                 ).textTheme.labelMedium?.copyWith(color: AppColors.success),
@@ -189,11 +243,7 @@ class _MealPlanContent extends StatelessWidget {
                     messenger
                       ..hideCurrentSnackBar()
                       ..showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Impossible d\'enregistrer le suivi. Reessayez.',
-                          ),
-                        ),
+                        SnackBar(content: Text(l10n.trackingSaveError)),
                       );
                   }
                 },
@@ -208,7 +258,7 @@ class _MealPlanContent extends StatelessWidget {
                     ..hideCurrentSnackBar()
                     ..showSnackBar(
                       SnackBar(
-                        content: Text(errorMessage ?? 'Repas remplacé.'),
+                        content: Text(errorMessage ?? l10n.mealReplaced),
                       ),
                     );
                 },
@@ -224,12 +274,16 @@ class _MealPlanContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Repartition des macros',
+                        l10n.macroDistributionTitle,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Protéines ${summary.proteinPercent}%  -  Glucides ${summary.carbsPercent}%  -  Lipides ${summary.fatPercent}%',
+                        l10n.macroDistributionSummary(
+                          summary.proteinPercent,
+                          summary.carbsPercent,
+                          summary.fatPercent,
+                        ),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: AppColors.secondaryText,
                         ),
@@ -249,14 +303,24 @@ class _MealPlanContent extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () => context.go(AppRoutes.shoppingList),
             icon: const Icon(Icons.shopping_basket_rounded),
-            label: const Text('Voir la liste de courses'),
+            label: Text(l10n.shoppingListButton),
           ),
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () => context.go(AppRoutes.generatingPlan),
             icon: const Icon(Icons.auto_awesome_rounded),
-            label: const Text('Régénérer le plan IA'),
+            label: Text(l10n.regeneratePlanButton),
           ),
+          if (planGenerationQuotaMessage != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              planGenerationQuotaMessage!,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.secondaryText),
+            ),
+          ],
         ],
       ),
     );
@@ -271,6 +335,8 @@ class _ErrorScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return AppScaffold(
       scrollable: false,
       child: Center(
@@ -284,7 +350,7 @@ class _ErrorScaffold extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Impossible de charger le plan.',
+              l10n.loadPlanErrorTitle,
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
@@ -300,7 +366,7 @@ class _ErrorScaffold extends StatelessWidget {
             ElevatedButton.icon(
               onPressed: () => context.go(AppRoutes.generatingPlan),
               icon: const Icon(Icons.auto_awesome_rounded),
-              label: const Text('Générer un plan'),
+              label: Text(l10n.generatePlanButton),
             ),
             const SizedBox(height: 8),
             TextButton.icon(
@@ -308,7 +374,7 @@ class _ErrorScaffold extends StatelessWidget {
                 onRetry();
               },
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Réessayer'),
+              label: Text(l10n.retryButton),
             ),
           ],
         ),
@@ -334,10 +400,12 @@ class _MealCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return InkWell(
       key: ValueKey('meal-card-${meal.id}'),
       borderRadius: BorderRadius.circular(24),
-      onTap: () => context.go(AppRoutes.mealDetailsFor(meal.id)),
+      onTap: () => context.push(AppRoutes.mealDetailsFor(meal.id)),
       child: SoftCard(
         padding: const EdgeInsets.all(14),
         child: Row(
@@ -396,7 +464,7 @@ class _MealCard extends StatelessWidget {
                       )
                     : IconButton(
                         key: ValueKey('meal-replace-button-${meal.id}'),
-                        tooltip: 'Remplacer',
+                        tooltip: l10n.replaceMealTooltip,
                         onPressed: onReplaceMeal,
                         icon: const Icon(Icons.auto_awesome_rounded),
                         color: AppColors.primary,

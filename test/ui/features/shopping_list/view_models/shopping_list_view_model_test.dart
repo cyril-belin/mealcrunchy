@@ -60,5 +60,34 @@ void main() {
       expect(unchecked, isTrue);
       expect(store.shoppingList.single.checked, isFalse);
     });
+
+    test('hides unexpected loading errors behind a generic message', () async {
+      final viewModel = ShoppingListViewModel(
+        shoppingListRepository: _ThrowingShoppingListRepository(
+          StateError('debug shopping list failure'),
+        ),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        viewModel.itemsState,
+        isA<ViewError<List<ShoppingListItem>>>().having(
+          (state) => state.message,
+          'message',
+          'Une erreur est survenue. Réessayez dans un instant.',
+        ),
+      );
+    });
   });
+}
+
+class _ThrowingShoppingListRepository extends ShoppingListRepository {
+  _ThrowingShoppingListRepository(this.exception)
+    : super(localDataStore: FakeLocalDataStore());
+
+  final Object exception;
+
+  @override
+  Future<List<ShoppingListItem>> getShoppingList() async => throw exception;
 }

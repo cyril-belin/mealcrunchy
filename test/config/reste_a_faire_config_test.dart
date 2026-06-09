@@ -47,6 +47,19 @@ void main() {
       expect(content, contains('/android/key.properties'));
     });
 
+    test('denies direct client access to Firestore by default', () {
+      final firebaseConfig = File('firebase.json').readAsStringSync();
+
+      expect(firebaseConfig, contains('"firestore"'));
+      expect(firebaseConfig, contains('"rules": "firestore.rules"'));
+
+      final rules = File('firestore.rules').readAsStringSync();
+
+      expect(rules, contains('service cloud.firestore'));
+      expect(rules, contains('match /databases/{database}/documents'));
+      expect(rules, contains('allow read, write: if false;'));
+    });
+
     test('uses a MealCrunchy project description', () {
       final pubspec = File('pubspec.yaml').readAsStringSync();
 

@@ -96,6 +96,42 @@ void main() {
     expect(passwordEditableText().obscureText, isFalse);
   });
 
+  testWidgets('validates short sign up passwords locally', (tester) async {
+    await tester.pumpWidget(
+      _AuthTestApp(
+        viewModel: AuthViewModel(
+          authRepository: AuthRepository(service: _SuccessfulAuthService()),
+          localDataStore: _FakeLocalDataStore(),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('S\'inscrire').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-name-field')),
+      'Alex Rivers',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-email-field')),
+      'alex@example.com',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password-field')),
+      '12345',
+    );
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('auth-submit-button')),
+    );
+    await tester.tap(find.byKey(const ValueKey('auth-submit-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Le mot de passe doit contenir au moins 6 caractères.'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('uses sign up autofill and name input hints', (tester) async {
     await tester.pumpWidget(
       _AuthTestApp(

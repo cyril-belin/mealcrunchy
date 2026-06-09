@@ -37,6 +37,23 @@ void main() {
     expect(find.text('Commencer'), findsOneWidget);
   });
 
+  testWidgets('configures a dark theme for system appearance changes', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MealCrunchyApp(
+        authRepository: _authRepository(account: null),
+        localDataStore: FakeLocalDataStore(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
+
+    expect(app.darkTheme, isNotNull);
+    expect(app.themeMode, ThemeMode.system);
+  });
+
   testWidgets('meal detail back button falls back to the meal plan route', (
     tester,
   ) async {
@@ -58,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('Repas prevus'), findsOneWidget);
+    expect(find.text('Repas prévus'), findsOneWidget);
   });
 
   testWidgets('auth screen switches between login and sign up modes', (

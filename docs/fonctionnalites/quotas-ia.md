@@ -11,6 +11,8 @@ Limiter l'usage gratuit des generations IA par compte afin de controler les cout
 - Remplacement de repas : 10 remplacements par compte et par mois.
 - Stockage serveur : collection Firestore Admin `aiQuotas`, document `${uid}_${periodKey}`.
 - Champs serveur : `uid`, `periodKey`, `mealPlanGenerationsUsed`, `mealReplacementsUsed`, `updatedAt`.
+- Securite client : `firestore.rules` refuse toute lecture/ecriture directe ; seul l'Admin SDK des Functions manipule les quotas.
+- Concurrence : le quota est reserve transactionnellement avant OpenAI, puis libere si OpenAI echoue ou si la reponse IA est invalide.
 
 ## Perimetre inclus
 
@@ -69,6 +71,7 @@ Limiter l'usage gratuit des generations IA par compte afin de controler les cout
 ```bash
 cd functions && npm test
 flutter test test/data/services/ai_proxy_service_test.dart test/ui/features/onboarding/views/generating_plan_screen_test.dart test/ui/features/meal_plan/view_models/meal_plan_view_model_test.dart test/ui/features/meal_plan/views/meal_details_screen_test.dart
+flutter test test/config/reste_a_faire_config_test.dart
 flutter test
 flutter analyze
 ```
@@ -83,12 +86,14 @@ Validation MCP Flutter : DTD connecte, mais `widget_inspector get_widget_tree` a
 |---|---|---|---|---|---|
 | 2026-06-08 | `git switch -c codex/quotas-ia` | `Operation not permitted` sur `.git/refs/heads/...lock` | Sandbox en lecture seule sur `.git` | Commande relancee avec autorisation d'ecriture Git | Branche `codex/quotas-ia` creee |
 | 2026-06-08 | MCP Flutter `widget_inspector get_widget_tree` | `Bad state: No element` | App connectee au DTD sans element inspectable disponible | Absence d'inspection widget live documentee ; validation UI couverte par tests widget | Tests widget quota generation/remplacement |
+| 2026-06-08 | Revue quotas IA | Risque de cout OpenAI perdu sous concurrence au dernier quota | Le flux initial verifiait avant OpenAI puis incrementait apres validation | Reservation transactionnelle avant OpenAI et liberation si OpenAI/payload invalide echoue | `cd functions && npm test` |
 
 ## Checklist de fin
 
 - [x] Le quota est verifie cote serveur.
-- [x] Le quota est decremente seulement apres succes valide.
+- [x] Le quota est reserve avant OpenAI et libere si la generation valide echoue.
 - [x] L'utilisateur voit un message clair si le quota est atteint.
+- [x] Les regles Firestore refusent les acces directs client.
 - [x] Les tests proxy passent.
 - [x] Les tests Flutter passent.
 - [x] `flutter test` passe.

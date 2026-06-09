@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase-admin/app";
 import { defineSecret } from "firebase-functions/params";
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, type CallableOptions } from "firebase-functions/v2/https";
 
 import { buildOpenAiDependencies } from "./openai";
 import {
@@ -13,9 +13,12 @@ initializeApp();
 
 const openAiApiKey = defineSecret("OPENAI_API_KEY");
 
-const callableOptions = {
+export const aiCallableOptions: CallableOptions = {
   region: "europe-west1",
   secrets: [openAiApiKey],
+  timeoutSeconds: 120,
+  memory: "512MiB",
+  enforceAppCheck: true,
 };
 
 function openAiDependencies() {
@@ -31,14 +34,14 @@ function quotaDependencies() {
   };
 }
 
-export const generateMealPlan = onCall(callableOptions, (request) => {
+export const generateMealPlan = onCall(aiCallableOptions, (request) => {
   return buildGenerateMealPlanHandler(
     openAiDependencies(),
     quotaDependencies(),
   )(request);
 });
 
-export const replaceMeal = onCall(callableOptions, (request) => {
+export const replaceMeal = onCall(aiCallableOptions, (request) => {
   return buildReplaceMealHandler(openAiDependencies(), quotaDependencies())(
     request,
   );

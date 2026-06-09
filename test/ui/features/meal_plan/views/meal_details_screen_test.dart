@@ -8,6 +8,7 @@ import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
+import 'package:mealcrunchy/l10n/app_localizations.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_model.dart';
 import 'package:mealcrunchy/ui/features/meal_plan/views/meal_details_screen.dart';
@@ -108,6 +109,8 @@ class _MealDetailsTestApp extends StatelessWidget {
       child: MaterialApp(
         title: 'MealCrunchy',
         theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: MealDetailsScreen(mealId: mealId),
       ),
     );

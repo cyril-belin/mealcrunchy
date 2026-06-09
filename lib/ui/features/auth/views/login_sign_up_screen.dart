@@ -159,7 +159,7 @@ class _LoginSignUpScreenState extends State<LoginSignUpScreen> {
                     autofillHints: _isSignUp
                         ? const [AutofillHints.newPassword]
                         : const [AutofillHints.password],
-                    validator: _validateRequired,
+                    validator: _validatePassword,
                     onFieldSubmitted: (_) =>
                         authViewModel.isLoading ? null : _submit(authViewModel),
                     decoration: InputDecoration(
@@ -264,6 +264,19 @@ class _LoginSignUpScreenState extends State<LoginSignUpScreen> {
     if (!email.contains('@') || email.startsWith('@') || email.endsWith('@')) {
       return 'Adresse e-mail invalide.';
     }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    final requiredError = _validateRequired(value);
+    if (requiredError != null) {
+      return requiredError;
+    }
+
+    if (_isSignUp && value!.trim().length < 6) {
+      return 'Le mot de passe doit contenir au moins 6 caractères.';
+    }
+
     return null;
   }
 }

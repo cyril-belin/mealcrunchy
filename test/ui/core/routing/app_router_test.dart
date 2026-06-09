@@ -11,6 +11,7 @@ import 'package:mealcrunchy/domain/models/auth_account.dart';
 import 'package:mealcrunchy/domain/models/meal_plan.dart';
 import 'package:mealcrunchy/domain/models/shopping_list_item.dart';
 import 'package:mealcrunchy/domain/models/user_profile.dart';
+import 'package:mealcrunchy/l10n/app_localizations.dart';
 import 'package:mealcrunchy/ui/core/routing/app_router.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
@@ -150,6 +151,8 @@ class _RouterTestApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'MealCrunchy',
         theme: AppTheme.light(),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: router,
       ),
     );

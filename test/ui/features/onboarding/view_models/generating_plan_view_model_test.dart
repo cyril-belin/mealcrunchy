@@ -1,7 +1,9 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/data/services/observability_service.dart';
 import 'package:mealcrunchy/domain/models/activity_level.dart';
 import 'package:mealcrunchy/domain/models/diet_style.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
@@ -17,9 +19,11 @@ void main() {
   group('GeneratingPlanViewModel', () {
     test('exposes loading then generated plan on success', () async {
       final repository = _GeneratingMealPlanRepository();
+      final observabilityService = _RecordingObservabilityService();
       final viewModel = GeneratingPlanViewModel(
         mealPlanRepository: repository,
         localDataStore: _GeneratingLocalDataStore(userProfile: _profile),
+        observabilityService: observabilityService,
       );
 
       final generation = viewModel.generate();
@@ -29,6 +33,11 @@ void main() {
 
       expect(viewModel.state, isA<ViewData<MealPlan>>());
       expect(repository.generatedWithProfile, _profile);
+      expect(viewModel.planGenerationUsage?.remaining, 0);
+      expect(observabilityService.events, [
+        'ai_plan_generation_started',
+        'ai_plan_generation_succeeded:0',
+      ]);
     });
 
     test('exposes a controlled error when profile is missing', () async {
@@ -50,11 +59,16 @@ void main() {
     });
 
     test('exposes proxy errors without producing a plan', () async {
+      final observabilityService = _RecordingObservabilityService();
       final viewModel = GeneratingPlanViewModel(
         mealPlanRepository: _GeneratingMealPlanRepository(
-          exception: Exception('Generation impossible'),
+          exception: const AiProxyException(
+            code: 'resource-exhausted',
+            message: 'Quota IA temporairement atteint.',
+          ),
         ),
         localDataStore: _GeneratingLocalDataStore(userProfile: _profile),
+        observabilityService: observabilityService,
       );
 
       await viewModel.generate();
@@ -64,10 +78,37 @@ void main() {
         isA<ViewError<MealPlan>>().having(
           (state) => state.message,
           'message',
-          'Exception: Generation impossible',
+          'Quota IA temporairement atteint.',
         ),
       );
+      expect(observabilityService.events, [
+        'ai_plan_generation_started',
+        'ai_plan_generation_failed:resource-exhausted',
+      ]);
     });
+
+    test(
+      'hides unexpected generation errors behind a generic message',
+      () async {
+        final viewModel = GeneratingPlanViewModel(
+          mealPlanRepository: _GeneratingMealPlanRepository(
+            exception: StateError('debug generation failure'),
+          ),
+          localDataStore: _GeneratingLocalDataStore(userProfile: _profile),
+        );
+
+        await viewModel.generate();
+
+        expect(
+          viewModel.state,
+          isA<ViewError<MealPlan>>().having(
+            (state) => state.message,
+            'message',
+            'Une erreur est survenue. Réessayez dans un instant.',
+          ),
+        );
+      },
+    );
   });
 }
 
@@ -135,6 +176,12 @@ class _GeneratingMealPlanRepository extends MealPlanRepository {
     if (exception != null) {
       throw exception;
     }
+    lastPlanGenerationUsage = const AiQuotaUsage(
+      periodKey: '2026-06',
+      limit: 1,
+      used: 1,
+      remaining: 0,
+    );
     return _plan;
   }
 }
@@ -186,4 +233,34 @@ class _GeneratingLocalDataStore implements LocalDataStore {
 
   @override
   Future<void> saveProfileNeedsPlanRegeneration(bool value) async {}
+}
+
+class _RecordingObservabilityService implements ObservabilityService {
+  final events = <String>[];
+
+  @override
+  NavigatorObserver? createNavigatorObserver() => null;
+
+  @override
+  Future<void> logAiPlanGenerationStarted() async {
+    events.add('ai_plan_generation_started');
+  }
+
+  @override
+  Future<void> logAiPlanGenerationSucceeded({AiQuotaUsage? usage}) async {
+    events.add('ai_plan_generation_succeeded:${usage?.remaining}');
+  }
+
+  @override
+  Future<void> logAiPlanGenerationFailed({String? code}) async {
+    events.add('ai_plan_generation_failed:${code ?? 'unknown'}');
+  }
+
+  @override
+  Future<void> recordError(
+    Object error,
+    StackTrace stackTrace, {
+    bool fatal = false,
+    String? reason,
+  }) async {}
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
@@ -12,6 +13,10 @@ import 'package:mealcrunchy/ui/features/meal_plan/view_models/meal_plan_view_mod
 import '../../../../helpers/fake_local_data_store.dart';
 
 void main() {
+  setUpAll(() async {
+    await initializeDateFormatting('fr_FR');
+  });
+
   group('MealPlanViewModel daily tracking', () {
     test(
       'mealById returns the matching meal and null for an unknown id',
@@ -63,6 +68,24 @@ void main() {
       expect(viewModel.isMealConsumed('lunch'), isTrue);
       expect(summary.data.consumedCalories, 600);
       expect(summary.data.progress, 0.3);
+    });
+
+    test('formats the current day label with French accents', () async {
+      final februaryViewModel = MealPlanViewModel(
+        mealPlanRepository: _TrackingMealPlanRepository(
+          localDataStore: FakeLocalDataStore(),
+        ),
+        now: () => DateTime(2026, 2, 6),
+      );
+      final augustViewModel = MealPlanViewModel(
+        mealPlanRepository: _TrackingMealPlanRepository(
+          localDataStore: FakeLocalDataStore(),
+        ),
+        now: () => DateTime(2026, 8, 6),
+      );
+
+      expect(februaryViewModel.currentDayDateLabel, '6 février');
+      expect(augustViewModel.currentDayDateLabel, '6 août');
     });
 
     test('reloads consumed meals from local tracking storage', () async {
@@ -135,6 +158,7 @@ void main() {
         expect(meals[1], same(_lunch));
         expect(summary.data.consumedCalories, 500);
         expect(viewModel.replacementErrorMessage, isNull);
+        expect(viewModel.mealReplacementUsage?.remaining, 6);
       },
     );
 
@@ -158,6 +182,28 @@ void main() {
         expect(
           viewModel.replacementErrorMessage,
           'Alternative IA indisponible.',
+        );
+      },
+    );
+
+    test(
+      'hides unexpected replacement errors behind a generic message',
+      () async {
+        final viewModel = MealPlanViewModel(
+          mealPlanRepository: _ThrowingReplacementMealPlanRepository(
+            localDataStore: FakeLocalDataStore(),
+            exception: StateError('debug replacement failure'),
+          ),
+          now: () => DateTime(2026, 6, 6),
+        );
+        await Future<void>.delayed(Duration.zero);
+
+        final success = await viewModel.replaceMeal('breakfast');
+
+        expect(success, isFalse);
+        expect(
+          viewModel.replacementErrorMessage,
+          'Une erreur est survenue. Réessayez dans un instant.',
         );
       },
     );
@@ -273,6 +319,12 @@ class _ReplacingMealPlanRepository extends _TrackingMealPlanRepository {
 
   @override
   Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
+    lastMealReplacementUsage = const AiQuotaUsage(
+      periodKey: '2026-06',
+      limit: 10,
+      used: 4,
+      remaining: 6,
+    );
     return _replacementCompleter?.future ?? _replacementPlan;
   }
 }
@@ -282,12 +334,18 @@ class _ThrowingReplacementMealPlanRepository
   _ThrowingReplacementMealPlanRepository({
     required super.localDataStore,
     this.message = 'Alternative IA indisponible.',
+    this.exception,
   });
 
   final String message;
+  final Object? exception;
 
   @override
   Future<MealPlan> replaceMeal(String mealId, {Meal? currentMeal}) async {
+    final exception = this.exception;
+    if (exception != null) {
+      throw exception;
+    }
     throw MealPlanReplacementException(message);
   }
 }

@@ -37,7 +37,33 @@ void main() {
 
       await Future<void>.delayed(Duration.zero);
 
-      expect(viewModel.profileState, isA<ViewError<ProfilePreferences>>());
+      expect(
+        viewModel.profileState,
+        isA<ViewError<ProfilePreferences>>().having(
+          (state) => state.message,
+          'message',
+          'Aucun profil nutritionnel sauvegardé.',
+        ),
+      );
+    });
+
+    test('hides unexpected loading errors behind a generic message', () async {
+      final viewModel = ProfileViewModel(
+        preferencesRepository: _ThrowingPreferencesRepository(
+          exception: StateError('debug profile failure'),
+        ),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+
+      expect(
+        viewModel.profileState,
+        isA<ViewError<ProfilePreferences>>().having(
+          (state) => state.message,
+          'message',
+          'Une erreur est survenue. Réessayez dans un instant.',
+        ),
+      );
     });
   });
 }
@@ -78,13 +104,16 @@ class _SuccessfulPreferencesRepository extends PreferencesRepository {
 }
 
 class _ThrowingPreferencesRepository extends PreferencesRepository {
-  _ThrowingPreferencesRepository()
-    : super(localDataStore: FakeLocalDataStore());
+  _ThrowingPreferencesRepository({
+    this.exception = const ProfilePreferencesUnavailableException(
+      'Aucun profil nutritionnel sauvegardé.',
+    ),
+  }) : super(localDataStore: FakeLocalDataStore());
+
+  final Object exception;
 
   @override
   Future<ProfilePreferences> getProfilePreferences() async {
-    throw const ProfilePreferencesUnavailableException(
-      'Aucun profil nutritionnel sauvegardé.',
-    );
+    throw exception;
   }
 }

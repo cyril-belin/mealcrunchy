@@ -1,8 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:mealcrunchy/data/repositories/meal_plan_repository.dart';
+import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/domain/models/meal.dart';
 import 'package:mealcrunchy/domain/models/nutrition_summary.dart';
+import 'package:mealcrunchy/ui/core/state/view_error_message.dart';
 import 'package:mealcrunchy/ui/core/state/view_state.dart';
+import 'package:intl/intl.dart';
 
 class MealPlanViewModel extends ChangeNotifier {
   MealPlanViewModel({
@@ -22,24 +25,15 @@ class MealPlanViewModel extends ChangeNotifier {
   Set<String> _consumedMealIds = <String>{};
   NutritionSummary? _targetSummary;
 
-  String get currentDayLabel {
+  AiQuotaUsage? get planGenerationUsage =>
+      _mealPlanRepository.lastPlanGenerationUsage;
+
+  AiQuotaUsage? get mealReplacementUsage =>
+      _mealPlanRepository.lastMealReplacementUsage;
+
+  String get currentDayDateLabel {
     final currentDate = _now();
-    final monthName = switch (currentDate.month) {
-      1 => 'janv.',
-      2 => 'fev.',
-      3 => 'mars',
-      4 => 'avr.',
-      5 => 'mai',
-      6 => 'juin',
-      7 => 'juil.',
-      8 => 'aout',
-      9 => 'sept.',
-      10 => 'oct.',
-      11 => 'nov.',
-      12 => 'dec.',
-      _ => '',
-    };
-    return 'Aujourd\'hui, ${currentDate.day} $monthName';
+    return DateFormat.MMMMd('fr_FR').format(currentDate);
   }
 
   Future<void> load() async {
@@ -57,13 +51,20 @@ class MealPlanViewModel extends ChangeNotifier {
       _targetSummary = targetSummary;
       mealsState = ViewData(meals);
       summaryState = ViewData(_buildConsumedSummary(meals, targetSummary));
-    } catch (error) {
-      final message = error.toString();
-      mealsState = ViewError(message);
-      summaryState = ViewError(message);
+    } on MealPlanUnavailableException catch (error) {
+      _setLoadError(error.message);
+    } on AiProxyException catch (error) {
+      _setLoadError(error.message);
+    } catch (_) {
+      _setLoadError(unexpectedViewErrorMessage);
     }
 
     notifyListeners();
+  }
+
+  void _setLoadError(String message) {
+    mealsState = ViewError(message);
+    summaryState = ViewError(message);
   }
 
   bool isMealConsumed(String id) => _consumedMealIds.contains(id);
@@ -131,8 +132,17 @@ class MealPlanViewModel extends ChangeNotifier {
         _buildConsumedSummary(updatedMeals, updatedPlan.summary),
       );
       return true;
-    } catch (error) {
-      replacementErrorMessage = error.toString();
+    } on MealPlanReplacementException catch (error) {
+      replacementErrorMessage = error.message;
+      return false;
+    } on MealPlanUnavailableException catch (error) {
+      replacementErrorMessage = error.message;
+      return false;
+    } on AiProxyException catch (error) {
+      replacementErrorMessage = error.message;
+      return false;
+    } catch (_) {
+      replacementErrorMessage = unexpectedViewErrorMessage;
       return false;
     } finally {
       replacingMealId = null;

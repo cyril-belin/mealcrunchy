@@ -7,6 +7,8 @@ import 'package:mealcrunchy/data/repositories/shopping_list_repository.dart';
 import 'package:mealcrunchy/data/services/ai_proxy_service.dart';
 import 'package:mealcrunchy/data/services/auth_service.dart';
 import 'package:mealcrunchy/data/services/local_data_store.dart';
+import 'package:mealcrunchy/data/services/observability_service.dart';
+import 'package:mealcrunchy/l10n/app_localizations.dart';
 import 'package:mealcrunchy/ui/core/routing/app_router.dart';
 import 'package:mealcrunchy/ui/core/routing/app_routes.dart';
 import 'package:mealcrunchy/ui/core/theme/app_theme.dart';
@@ -23,17 +25,23 @@ class MealCrunchyApp extends StatelessWidget {
     super.key,
     this.authRepository,
     this.localDataStore,
+    this.observabilityService,
     this.initialLocation = AppRoutes.splash,
   });
 
   final AuthRepository? authRepository;
   final LocalDataStore? localDataStore;
+  final ObservabilityService? observabilityService;
   final String initialLocation;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        Provider<ObservabilityService>(
+          create: (_) =>
+              observabilityService ?? const NoopObservabilityService(),
+        ),
         Provider<AiProxyService>(create: (_) => AiProxyService()),
         Provider<AuthService>(create: (_) => FirebaseAuthService()),
         ProxyProvider<AuthService, AuthRepository>(
@@ -97,24 +105,28 @@ class MealCrunchyApp extends StatelessWidget {
             );
           },
         ),
-        ChangeNotifierProxyProvider2<
+        ChangeNotifierProxyProvider3<
           MealPlanRepository,
           LocalDataStore,
+          ObservabilityService,
           GeneratingPlanViewModel
         >(
           create: (context) {
             return GeneratingPlanViewModel(
               mealPlanRepository: context.read<MealPlanRepository>(),
               localDataStore: context.read<LocalDataStore>(),
+              observabilityService: context.read<ObservabilityService>(),
             );
           },
-          update: (_, repository, localDataStore, previous) {
-            return previous ??
-                GeneratingPlanViewModel(
-                  mealPlanRepository: repository,
-                  localDataStore: localDataStore,
-                );
-          },
+          update:
+              (_, repository, localDataStore, observabilityService, previous) {
+                return previous ??
+                    GeneratingPlanViewModel(
+                      mealPlanRepository: repository,
+                      localDataStore: localDataStore,
+                      observabilityService: observabilityService,
+                    );
+              },
         ),
         ChangeNotifierProxyProvider<MealPlanRepository, MealPlanViewModel>(
           create: (context) {
@@ -173,9 +185,13 @@ class _MealCrunchyRouterState extends State<_MealCrunchyRouter> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final navigatorObserver = context
+        .read<ObservabilityService>()
+        .createNavigatorObserver();
     _router ??= createAppRouter(
       authViewModel: context.read<AuthViewModel>(),
       initialLocation: widget.initialLocation,
+      observers: [?navigatorObserver],
     );
   }
 
@@ -184,6 +200,10 @@ class _MealCrunchyRouterState extends State<_MealCrunchyRouter> {
     return MaterialApp.router(
       title: 'MealCrunchy',
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: ThemeMode.system,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: _router!,
       debugShowCheckedModeBanner: false,
     );
