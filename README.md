@@ -2,194 +2,196 @@
 
 # MealCrunchy
 
-**Application mobile de nutrition personnalisée par IA**
+**AI-assisted meal planning for personalized nutrition workflows.**
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.44-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Dart](https://img.shields.io/badge/Dart-3.12-0175C2?logo=dart&logoColor=white)](https://dart.dev)
-[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Functions-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Functions%20%7C%20Firestore-FFCA28?logo=firebase&logoColor=black)](https://firebase.google.com)
 [![OpenAI](https://img.shields.io/badge/OpenAI-Structured%20Outputs-412991?logo=openai&logoColor=white)](https://platform.openai.com)
-[![Tests](https://img.shields.io/badge/tests-147%20passing-brightgreen)]()
+[![Quality](https://img.shields.io/badge/147%20tests-0%20analyzer%20issues-brightgreen)]()
 
 </div>
 
----
+MealCrunchy is a Flutter mobile app that helps users move from a nutrition profile to a personalized 7-day meal plan, daily tracking, shopping list, and AI-assisted meal replacement. It is designed for people who want practical meal guidance without manually building every day of their plan. The project is interesting because it combines a product-ready Flutter experience with a secured Firebase backend for AI calls, quotas, validation, and observability.
 
-MealCrunchy est une application Flutter multiplateforme qui accompagne l'utilisateur dans son parcours nutritionnel : de l'onboarding personnalisé au plan repas 7 jours, en passant par le suivi quotidien des calories et macronutriments. Le plan repas est personnalisable via un proxy Firebase Cloud Functions qui interroge l'API OpenAI avec Structured Outputs.
+## Highlights
+
+- AI-generated 7-day meal plans.
+- Meal replacement flow for individual meals.
+- Firestore usage quotas for AI generation and replacements.
+- Firebase App Check on backend-mediated AI requests.
+- 147 tests and 0 analyzer issue.
+
+## Table of contents
+
+- [Screenshots](#screenshots)
+- [What is implemented](#what-is-implemented)
+- [Architecture decisions that matter](#architecture-decisions-that-matter)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Quick start](#quick-start)
+- [Configuration / environment](#configuration--environment)
+- [Quality and testing](#quality-and-testing)
+- [Security notes](#security-notes)
+- [Roadmap / current status](#roadmap--current-status)
+- [License / author](#license--author)
+
+## Screenshots
 
 <div align="center">
 
-| Splash | Onboarding | Dashboard | Detail repas |
-|:---:|:---:|:---:|:---:|
-| <img src="design-screenshots/Splash%20Screen.png" width="180"/> | <img src="design-screenshots/Onboarding%20Goals.png" width="180"/> | <img src="design-screenshots/Daily%20Meal%20Plan.png" width="180"/> | <img src="design-screenshots/Meal%20Details.png" width="180"/> |
+| Onboarding | Dashboard | Meal plan |
+|:---:|:---:|:---:|
+| <img src="design-screenshots/Onboarding%20Goals.png" width="210" alt="MealCrunchy onboarding goals screen"/> | <img src="design-screenshots/Daily%20Meal%20Plan.png" width="210" alt="MealCrunchy daily meal plan dashboard"/> | <img src="design-screenshots/Meal%20Details.png" width="210" alt="MealCrunchy meal detail screen"/> |
 
-| Login | Allergies | Mensurations | Profil |
-|:---:|:---:|:---:|:---:|
-| <img src="design-screenshots/Login%20%26%20Sign%20Up.png" width="180"/> | <img src="design-screenshots/Onboarding%20Allergies.png" width="180"/> | <img src="design-screenshots/Onboarding%20Metrics.png" width="180"/> | <img src="design-screenshots/Profile%20%26%20Preferences.png" width="180"/> |
+| Meal replacement | Preferences / profile | Authentication |
+|:---:|:---:|:---:|
+| <img src="design-screenshots/Generating%20Plan.png" width="210" alt="MealCrunchy AI generation screen"/> | <img src="design-screenshots/Profile%20%26%20Preferences.png" width="210" alt="MealCrunchy profile and preferences screen"/> | <img src="design-screenshots/Login%20%26%20Sign%20Up.png" width="210" alt="MealCrunchy login and sign up screen"/> |
 
 </div>
 
----
+## What is implemented
 
-## Fonctionnalites
+- Email/password authentication with Firebase Auth and route guards.
+- Nutrition onboarding covering goals, diet, allergies, activity level, and body metrics.
+- AI-generated 7-day meal plan through Firebase Cloud Functions and OpenAI Structured Outputs.
+- Meal replacement flow that preserves the active plan while swapping one selected meal.
+- Daily dashboard with consumed-meal state, calories, and macro progress.
+- Shopping list generated from the active meal plan.
+- Profile and preference editing after onboarding.
 
-Documentation complète : [docs/README.md](docs/README.md)
+## Architecture decisions that matter
 
-| Domaine | Description | Statut |
-|---|---|:---:|
-| Authentification | Inscription et connexion email/password via Firebase Auth, route guards | Done |
-| Onboarding | Parcours multi-etapes : objectif, regime, allergies, activite, mensurations | Done |
-| Stockage local | Persistance du profil, du plan actif et du suivi quotidien via SharedPreferences | Done |
-| Proxy IA | Firebase Cloud Functions (TypeScript) avec OpenAI Structured Outputs, validation entree/sortie | Done |
-| Dashboard quotidien | Plan du jour, checkbox repas consommes, progression calories et macros en temps reel | Done |
-| Detail repas | Fiche complete : type, duree, calories, macros, ingredients, instructions | Done |
-| Generation plan IA | Plan repas 7 jours personnalise genere par le proxy OpenAI | Done |
-| Remplacement repas | Remplacer un repas par une alternative IA respectant le profil | Done |
-| Liste de courses | Liste d'ingredients generee depuis le plan actif, avec cases a cocher | Done |
-| Profil et preferences | Consultation et modification du profil nutritionnel apres onboarding | Done |
-| Quotas IA | Quotas mensuels par utilisateur (transaction Firestore), affichage du restant | Done |
-| Securite | Firebase App Check (Play Integrity / App Attest / reCAPTCHA), regles Firestore deny-all | Done |
-| Observabilite | Crashlytics (crashs) et Analytics (events IA, navigation) derriere une abstraction injectable | Done |
-| Internationalisation | `flutter_localizations` + `intl`, formats de dates localises (fr-FR) | Done |
-| Theme | Material 3, themes clair et sombre suivant le systeme | Done |
+- **API key security via backend proxy:** the OpenAI key stays in Firebase Functions and is never exposed to the Flutter client.
+- **Structured Outputs validation:** AI responses are constrained and validated before being accepted by the app.
+- **Non-blocking observability:** Crashlytics and Analytics are behind an injectable service; telemetry failure does not block the user flow.
+- **Firestore quotas for abuse control:** monthly usage is reserved through backend-side Firestore transactions before expensive AI calls.
+- **Local-first storage today, cloud sync later:** `LocalDataStore` abstracts persistence so the app can migrate from local storage to Firestore-backed sync without rewriting UI state.
 
-## Architecture
+## Tech stack
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                        UI Layer                         │
-│  View (StatelessWidget) ←→ ViewModel (ChangeNotifier)   │
-├─────────────────────────────────────────────────────────┤
-│                      Data Layer                         │
-│  Repository ←→ Service / LocalDataStore                 │
-├─────────────────────────────────────────────────────────┤
-│                     Domain Layer                        │
-│  Immutable Models  ·  JSON serialization  ·  Typesafe   │
-├─────────────────────────────────────────────────────────┤
-│                   Backend (serverless)                   │
-│  Firebase Cloud Functions (TypeScript)  →  OpenAI API   │
-│  App Check  ·  Quotas Firestore  ·  Secrets manager     │
-└─────────────────────────────────────────────────────────┘
-```
-
-- **MVVM** avec `Provider` / `ChangeNotifierProxyProvider` pour l'injection de dependances et le chainage reactif.
-- **ViewState** (`ViewLoading`, `ViewError`, `ViewData`) pour gerer les etats asynchrones de chaque ecran de maniere exhaustive via `switch` expressions.
-- **GoRouter** pour la navigation declarative avec route guards et deep linking.
-- **LocalDataStore** abstrait (interface injectable) : persistance via `SharedPreferencesAsync`, facilement remplacable par un faux store en test.
-- **AiProxyService** isole le backend IA derriere une abstraction `AiCallableClient` injectable, zero couplage Firebase dans les tests.
-- **ObservabilityService** abstrait Crashlytics et Analytics : implementation `Firebase` en prod, `Noop` en test, aucun blocage de l'app si la telemetrie echoue.
-- **App Check** applique cote serveur (`enforceAppCheck`) et active cote client par plateforme, pour proteger les Functions IA couteuses contre l'abus.
-
-## Stack technique
-
-| Categorie | Technologies |
+| Area | Stack |
 |---|---|
-| **Frontend** | Flutter 3.44 · Dart 3.12 · Provider · GoRouter · Material 3 (clair/sombre) |
-| **Backend** | Firebase Cloud Functions v2 (TypeScript) · OpenAI Responses API |
-| **Auth & Securite** | Firebase Authentication (email/password) · App Check · regles Firestore deny-all |
-| **Quotas** | Transactions Firestore (Admin SDK) · quotas mensuels par utilisateur |
-| **Observabilite** | Firebase Crashlytics · Firebase Analytics |
-| **i18n** | `flutter_localizations` · `intl` (fr-FR) |
-| **Persistance** | SharedPreferences (profil, plan actif, suivi quotidien, liste de courses) |
-| **Design** | Plus Jakarta Sans · Design system tokens (couleurs, typographie, composants) |
-| **Tests** | `flutter_test` (137 tests) · Node.js `node:test` (10 tests Functions) |
-| **CI/Qualite** | `flutter analyze` (0 issue) · lint strict · revue de code systematique |
+| App | Flutter 3.44, Dart 3.12, Material 3 |
+| State management | Provider, ChangeNotifier, ProxyProvider |
+| Routing | GoRouter with route guards |
+| Backend | Firebase Cloud Functions v2, TypeScript, Node.js 22 |
+| AI | OpenAI Responses API, Structured Outputs |
+| Firebase | Authentication, Firestore, App Check, Crashlytics, Analytics |
+| Persistence | SharedPreferences behind an injectable `LocalDataStore` |
+| Testing | `flutter_test`, Node.js `node:test`, `flutter analyze` |
 
-## Demarrage rapide
-
-### Prerequis
-
-- Flutter SDK >= 3.44
-- Dart SDK >= 3.12
-- Node.js >= 22 (pour les Firebase Functions)
-- Un projet Firebase configure avec Authentication active
-
-### Installation
-
-```bash
-# Cloner le depot
-git clone https://github.com/cyril-belin/mealcrunchy.git
-cd mealcrunchy
-
-# Installer les dependances Flutter
-flutter pub get
-
-# Installer les dependances Functions
-npm install --prefix functions
-
-# Lancer l'application
-flutter run
-```
-
-### Lancer les tests
-
-```bash
-# Tests Flutter (137 tests)
-flutter test
-
-# Analyse statique (0 issue)
-flutter analyze
-
-# Tests Firebase Functions (10 tests)
-npm test --prefix functions
-```
-
-## Structure du projet
+## Project structure
 
 ```text
 mealcrunchy/
-├── lib/
-│   ├── main.dart                        # Point d'entree
-│   ├── data/
-│   │   ├── repositories/               # Acces aux donnees (MealPlan, Preferences, Auth)
-│   │   └── services/                   # Sources (StaticContent, LocalDataStore, AiProxy, Auth)
-│   ├── domain/
-│   │   └── models/                     # Modeles immuables avec fromJson/toJson
-│   └── ui/
-│       ├── app.dart                    # Configuration providers et routeur
-│       ├── core/                       # Routing, theme, state (ViewState), widgets partages
-│       └── features/                   # Ecrans par domaine (auth, onboarding, meal_plan, profile)
-├── functions/
-│   └── src/                            # Cloud Functions TypeScript (proxy OpenAI)
-├── test/                               # Tests unitaires, widget et integration
-├── design-screenshots/                 # Maquettes de reference
-└── docs/fonctionnalites/               # Specs et suivi par fonctionnalite
+|-- lib/
+|   |-- main.dart                 # App entry point
+|   |-- data/                     # Repositories and services
+|   |-- domain/                   # Immutable models, JSON parsing, business types
+|   |-- l10n/                     # Localization resources
+|   `-- ui/                       # App shell, routing, theme, feature screens
+|-- functions/
+|   `-- src/                      # Firebase Functions proxy, quotas, validation
+|-- test/                         # Flutter unit, widget, repository, and ViewModel tests
+|-- docs/                         # Product, architecture, security, deployment, runbook
+|-- design-screenshots/           # Reference screens used in this README
+`-- firebase.json                 # Firebase and FlutterFire configuration
 ```
 
-## Decisions techniques
+Useful documentation:
 
-| Decision | Justification |
-|---|---|
-| `SharedPreferences` plutot que SQLite/Hive | Suffisant pour le MVP ; interface abstraite permettant de migrer sans casser l'existant |
-| Proxy Firebase plutot qu'appel direct OpenAI | Securite : la cle API ne quitte jamais le serveur ; validation stricte des reponses IA |
-| Structured Outputs (json_schema strict) | Garantit un format de reponse conforme cote IA, evite le parsing fragile |
-| App Check + quotas mensuels Firestore | Protege les Functions IA couteuses contre l'abus ; reservation avant appel, liberation en cas d'echec |
-| Observabilite derriere une abstraction | Crashlytics/Analytics injectables ; un echec de telemetrie ne bloque jamais l'experience |
-| `ChangeNotifier` + `Provider` | Simple, natif Flutter, suffisant pour l'echelle actuelle ; migration vers Riverpod possible sans refonte |
+- [Product overview](docs/produit.md)
+- [Technical architecture](docs/architecture.md)
+- [AI backend and quotas](docs/backend-ia.md)
+- [Security](docs/securite.md)
+- [Local development](docs/developpement-local.md)
+- [Quality and testing](docs/tests-qualite.md)
 
-## Methodologie
+## Quick start
 
-Le projet suit un workflow **design-first** et **feature-by-feature** :
+```bash
+git clone https://github.com/cyril-belin/mealcrunchy.git
+cd mealcrunchy
+```
 
-1. **Design** — Maquettes generees via FlutterFlow Designer, exportees en PNG et en prompts Markdown.
-2. **Specification** — Chaque fonctionnalite possede un fichier `.md` dedie (perimetre, regles, tests, etapes).
-3. **Implementation** — Une seule fonctionnalite active a la fois, avec isolation du contexte.
-4. **Tests** — Ecrits avant ou avec le code ; validation systematique (`flutter test`, `flutter analyze`).
-5. **Revue** — Code review structuree, identification des points d'attention, correction et retest.
-6. **Documentation** — Chaque erreur, resolution et validation est tracee dans le fichier de fonctionnalite.
+```bash
+flutter pub get
+npm install --prefix functions
+```
 
-## Roadmap
+Configure Firebase and the required secrets before using AI-related features.
 
-- [x] Generation du plan repas 7 jours via le proxy IA
-- [x] Remplacement d'un repas individuel par une alternative IA
-- [x] Liste de courses generee depuis le plan actif
-- [x] Ecran profil et preferences modifiables
-- [x] Gestion des quotas IA (quotas mensuels, transactions Firestore)
-- [x] Internationalisation (`flutter_localizations` / `intl`)
-- [x] Securite App Check et observabilite (Crashlytics / Analytics)
-- [x] Theme sombre (Material 3)
-- [ ] Amelioration de l'accessibilite (semantics, contrastes)
-- [ ] Persistance du choix de theme (clair / sombre / systeme)
+```bash
+flutter run
+```
 
-## Auteur
+To run against local Functions emulators when configured:
 
-**Cyril Belin** — [GitHub](https://github.com/cyril-belin)
+```bash
+flutter run --dart-define=USE_FUNCTIONS_EMULATOR=true
+```
+
+## Configuration / environment
+
+MealCrunchy requires a Firebase project configured for the target platforms.
+
+- Firebase Auth must be enabled for email/password sign-in.
+- `lib/firebase_options.dart` is generated with FlutterFire CLI.
+- AI features require a Firebase Functions secret named `OPENAI_API_KEY`.
+- Local Functions development can use `functions/.secret.local`; it must not be committed.
+- Web App Check requires a reCAPTCHA Enterprise site key passed with `APP_CHECK_RECAPTCHA_SITE_KEY`.
+- Firestore is used server-side for monthly AI usage quotas.
+
+Example setup commands:
+
+```bash
+dart pub global activate flutterfire_cli
+flutterfire configure
+firebase functions:secrets:set OPENAI_API_KEY
+```
+
+## Quality and testing
+
+The codebase is structured around maintainability: feature-oriented UI, injectable services, repository boundaries, typed ViewStates, and strict model validation.
+
+Current validation status:
+
+- 137 Flutter tests.
+- 10 Firebase Functions tests.
+- 147 tests total.
+- `flutter analyze`: 0 issue.
+
+Recommended checks before shipping changes:
+
+```bash
+flutter analyze
+flutter test
+npm test --prefix functions
+```
+
+## Security notes
+
+- No OpenAI API key is exposed in the client.
+- AI calls are mediated by Firebase Cloud Functions.
+- Firebase App Check is enforced on expensive callable Functions.
+- Monthly AI quotas are handled server-side with Firestore transactions.
+- Firestore client rules are deny-all while quota data remains backend-managed.
+- Input and output payloads are validated before use.
+
+## Roadmap / current status
+
+MealCrunchy is an advanced MVP with the core product loop implemented: onboarding, authentication, AI plan generation, daily tracking, shopping list, meal replacement, quotas, App Check, observability, and automated tests.
+
+Current focus areas:
+
+- Improve accessibility coverage across the main screens.
+- Persist explicit theme choice instead of only following system settings.
+- Prepare a future migration path from local-first storage to cloud sync.
+- Continue hardening production deployment and operational runbooks.
+
+## License / author
+
+License information has not been published yet.
+
+**Author:** Cyril Belin - [GitHub](https://github.com/cyril-belin)
