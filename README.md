@@ -40,13 +40,13 @@ MealCrunchy is a Flutter mobile app that helps users move from a nutrition profi
 
 <div align="center">
 
-| Onboarding | Dashboard | Meal plan |
+| Onboarding | Dashboard / replacements | Meal plan |
 |:---:|:---:|:---:|
-| <img src="design-screenshots/Onboarding%20Goals.png" width="210" alt="MealCrunchy onboarding goals screen"/> | <img src="design-screenshots/Daily%20Meal%20Plan.png" width="210" alt="MealCrunchy daily meal plan dashboard"/> | <img src="design-screenshots/Meal%20Details.png" width="210" alt="MealCrunchy meal detail screen"/> |
+| <img src="docs/screenshots/ios-simulator/onboarding.png" width="210" alt="MealCrunchy onboarding goals screen captured on iOS simulator"/> | <img src="docs/screenshots/ios-simulator/dashboard.png" width="210" alt="MealCrunchy daily meal plan dashboard captured on iOS simulator"/> | <img src="docs/screenshots/ios-simulator/meal-detail.png" width="210" alt="MealCrunchy meal detail screen captured on iOS simulator"/> |
 
-| Meal replacement | Preferences / profile | Authentication |
+| Preferences / profile | Shopping list | Authentication |
 |:---:|:---:|:---:|
-| <img src="design-screenshots/Generating%20Plan.png" width="210" alt="MealCrunchy AI generation screen"/> | <img src="design-screenshots/Profile%20%26%20Preferences.png" width="210" alt="MealCrunchy profile and preferences screen"/> | <img src="design-screenshots/Login%20%26%20Sign%20Up.png" width="210" alt="MealCrunchy login and sign up screen"/> |
+| <img src="docs/screenshots/ios-simulator/profile.png" width="210" alt="MealCrunchy profile and preferences screen captured on iOS simulator"/> | <img src="docs/screenshots/ios-simulator/shopping-list.png" width="210" alt="MealCrunchy shopping list screen captured on iOS simulator"/> | <img src="docs/screenshots/ios-simulator/auth.png" width="210" alt="MealCrunchy authentication screen captured on iOS simulator"/> |
 
 </div>
 
@@ -95,7 +95,7 @@ mealcrunchy/
 |   `-- src/                      # Firebase Functions proxy, quotas, validation
 |-- test/                         # Flutter unit, widget, repository, and ViewModel tests
 |-- docs/                         # Product, architecture, security, deployment, runbook
-|-- design-screenshots/           # Reference screens used in this README
+|-- docs/screenshots/             # Simulator screenshots used in this README
 `-- firebase.json                 # Firebase and FlutterFire configuration
 ```
 
